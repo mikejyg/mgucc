@@ -13,19 +13,31 @@
 #include "SockaddrUtils.h"
 #include "SocketUtils.h"
 #include "ErrorUtils.h"
-#include <unistd.h>
-//#include <cunistd>
+#include "Socket.h"
 
 namespace mikejyg {
 
 /**
  * similar to Java's Socket class.
  */
-class StreamSocket {
+class StreamSocket : public Socket {
 protected:
-	int sockfd;
+	struct addrinfo * resSel;
 
 public:
+	StreamSocket() {}
+
+	StreamSocket(StreamSocket && ss2) : Socket(std::move(ss2)) {
+	}
+
+	StreamSocket & operator = (StreamSocket && ss2) {
+		Socket::operator=( std::move(ss2) );
+		return *this;
+	}
+
+	/**
+	 * create the socket for the target host and port and connect, but do not connect yet.
+	 */
 	StreamSocket(char const * hostname, unsigned port) {
 		struct addrinfo hints;
 
@@ -35,58 +47,38 @@ public:
 		hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
 		hints.ai_socktype = SOCK_STREAM;
 
-		auto * res = SockaddrUtils::getaddrinfo(hostname, port, &hints);
+		res = SockaddrUtils::getaddrinfo(hostname, port, &hints);
+
+		// choose IPV4 if possible.
+
+		resSel=res;
+		while (resSel!=nullptr) {
+			if ( resSel->ai_family == AF_INET )
+				break;
+			resSel=resSel->ai_next;
+		}
+
+		if (resSel==nullptr)
+			resSel=res;
 
 		// make a socket:
 
-		sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		sockfd = socket(resSel->ai_family, resSel->ai_socktype, resSel->ai_protocol);
+
+		socketAddress.copy(resSel->ai_addr, resSel->ai_addrlen);
 
 		if (sockfd==-1)
 			throw ErrorUtils::ErrnoException("socket() failed:");
 
-		freeaddrinfo(res);
+	}
 
+	void connect() {
 		// connect it to the address and port we passed in to getaddrinfo():
 
-		SocketUtils::connect(sockfd, res->ai_addr, res->ai_addrlen);
-
+		SocketUtils::connect(sockfd, resSel->ai_addr, resSel->ai_addrlen);
 	}
 
-	virtual ~StreamSocket() {
-		// auto close
-		if (sockfd)
-			close();
-	}
-
-	int getSockfd() {
-		return sockfd;
-	}
-
-	void close() {
-		::close(sockfd);
-		sockfd = 0;
-	}
-
-	void send(const void *buf, size_t len, int flags=0) {
-		auto k = ::send(sockfd, buf, len, flags);
-		if (k==-1) {
-			throw ErrorUtils::ErrnoException("send() failed:");
-		}
-		if ( (size_t)k != len ) {
-			throw std::runtime_error("send() failed: " + std::to_string(k));
-		}
-
-	}
-
-	size_t recv(void *buf, size_t len, int flags=0) {
-		auto k = ::recv(sockfd, buf, len, flags);
-		if (k==-1) {
-			throw ErrorUtils::ErrnoException("recv() failed:");
-		}
-		return k;
-
-	}
-
+	virtual ~StreamSocket() {}
 
 };
 

@@ -37,11 +37,11 @@ public:
 			return InetSocketAddress::selectAddrinfo(res);
 		});
 
+		std::cout << "locahost:" << std::endl;
 		sockaddr.init("localhost", 0);
-		std::cout << "locahost: " << sockaddr.toString() << std::endl;
 
+		std::cout << "yahoo.com:" << std::endl;
 		sockaddr.init("yahoo.com", 0);
-		std::cout << "yahoo.com: " << sockaddr.toString() << std::endl;
 
 	}
 

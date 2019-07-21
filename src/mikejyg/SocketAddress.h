@@ -11,6 +11,7 @@
 #include "FlexPtr.h"
 #include <netinet/in.h>
 #include <cstdint>
+#include "SockaddrUtils.h"
 
 namespace mikejyg {
 
@@ -34,7 +35,22 @@ protected:
 public:
 	SocketAddress() {}
 
+	SocketAddress(SocketAddress && sa2) : FlexPtr(std::forward<FlexPtr>(sa2))
+	{}
+
+	SocketAddress & operator = (SocketAddress && sa2)
+	{
+		 wrap(sa2.uPtr.release());
+		 return *this;
+	}
+
 	virtual ~SocketAddress() {}
+
+	void copy(struct sockaddr const * sockaddr, int size) {
+		auto * newPtr = malloc(size);
+		memcpy(newPtr, sockaddr, size);
+		wrap((struct sockaddr*)newPtr);
+	}
 
 	SaFamily getSaFamily() {
 		return (SaFamily) get()->sa_family;
@@ -44,7 +60,9 @@ public:
 		get()->sa_family = saFamily;
 	}
 
-	virtual std::string toString() const = 0;
+	virtual std::string toString() const {
+		return SockaddrUtils::toString(get());
+	}
 
 };
 

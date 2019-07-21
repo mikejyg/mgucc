@@ -114,7 +114,7 @@ public:
 
 	}
 
-	static struct addrinfo * getaddrinfo (const char * hostname, int port, const struct addrinfo * hint) {
+	static struct addrinfo * getaddrinfo (const char * hostname, unsigned port, const struct addrinfo * hint) {
 		struct addrinfo *res;
 
 		auto portStr = std::to_string(port);

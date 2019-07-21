@@ -133,10 +133,6 @@ public:
 		((struct sockaddr_in *)get())->sin_port = htons(port);
 	}
 
-	virtual std::string toString() const override {
-		return SockaddrUtils::toString(get());
-	}
-
 	/**
 	 * set the selection function
 	 */

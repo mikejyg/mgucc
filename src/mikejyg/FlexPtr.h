@@ -22,7 +22,7 @@ namespace mikejyg {
  */
 template <typename T>
 class FlexPtr {
-private:
+protected:
 	std::unique_ptr<T> uPtr;
 	T * viewPtr;
 
@@ -61,7 +61,7 @@ public:
 	 * copy assignment
 	 * can only copy a view pointer.
 	 */
-	FlexPtr operator = (FlexPtr const & fp2) {
+	FlexPtr & operator = (FlexPtr const & fp2) {
 		assert(fp2.uPtr.get()==nullptr);
 
 		uPtr.release();
@@ -78,7 +78,7 @@ public:
 	/**
 	 * move assignment
 	 */
-	FlexPtr operator = (FlexPtr && fp2) {
+	FlexPtr & operator = (FlexPtr && fp2) {
 		uPtr=std::move(fp2.uPtr);
 		viewPtr=fp2.viewPtr;
 
