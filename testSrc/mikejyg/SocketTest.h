@@ -13,6 +13,10 @@
 #include <iostream>
 #include <mikejyg/ServerSocket.h>
 #include <thread>
+#include <vector>
+#include <map>
+#include <mikejyg/ThreadPool.h>
+#include <mutex>
 
 namespace mikejyg {
 
@@ -88,11 +92,38 @@ public:
 
 		serverSocket.listen();
 
+		ThreadPool threadPool(2);
+
+		int clientCnt=0;
+
+		std::vector<std::thread> serveThreads;
+		std::map< int, std::tuple<StreamSocket, SocketAddress> > clients;
+
+		std::mutex clientsMutex;
+
 		while (true) {
 			std::cout << "accepting connections..." << std::endl;
+
 			auto client = serverSocket.accept();
 
-			serve(client);
+			{
+				std::unique_lock<std::mutex> lock(clientsMutex);
+				clients.emplace( clientCnt, std::move(client) );
+			}
+
+			threadPool.enqueue([ & clientsMutex, & clients, clientCnt]{
+				serve( clients.find(clientCnt)->second );
+
+				{
+					std::unique_lock<std::mutex> lock(clientsMutex);
+					clients.erase(clientCnt);
+				}
+				std::cout << "client removed: " << clientCnt << std::endl;
+
+			});
+
+			std::cout << "client added: " << clientCnt << std::endl;
+			clientCnt++;
 
 		}
 

@@ -25,9 +25,9 @@ protected:
 	struct addrinfo * resSel;
 
 public:
-	StreamSocket() {}
+	StreamSocket() : resSel(nullptr) {}
 
-	StreamSocket(StreamSocket && ss2) : Socket(std::move(ss2)) {
+	StreamSocket(StreamSocket && ss2) : Socket(std::move(ss2)), resSel(nullptr) {
 	}
 
 	StreamSocket & operator = (StreamSocket && ss2) {
