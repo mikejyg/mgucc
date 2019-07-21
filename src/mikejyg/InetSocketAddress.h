@@ -120,16 +120,7 @@ public:
 	 * initialize from a hostname and a port number.
 	 */
 	void init(std::string hostname, unsigned port) {
-		auto portStr = std::to_string(port);
-
-		struct addrinfo *res;
-
-		auto k = getaddrinfo(hostname.c_str(), portStr.c_str(),
-				nullptr, & res);
-
-		if (k!=0) {
-			throw std::runtime_error("getaddrinfo() failed, return code: " + std::to_string(k));
-		}
+		auto * res = SockaddrUtils::getaddrinfo(hostname.c_str(), port, nullptr);
 
 		auto * addrinfoPtr = addrinfoSelectFunction(res);
 

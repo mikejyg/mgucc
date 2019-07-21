@@ -11,9 +11,16 @@
 #include <string>
 #include "Inet4Address.h"
 #include "Inet6Address.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <stdexcept>
 
 namespace mikejyg {
 
+/**
+ * utilities for struct sockaddr.
+ */
 class SockaddrUtils {
 public:
 	static std::string toString(struct in_addr const * inAddrPtr) {
@@ -105,6 +112,20 @@ public:
 
 		return str;
 
+	}
+
+	static struct addrinfo * getaddrinfo (const char * hostname, int port, const struct addrinfo * hint) {
+		struct addrinfo *res;
+
+		auto portStr = std::to_string(port);
+
+		auto k = ::getaddrinfo(hostname, portStr.c_str(), hint, & res);
+
+		if (k!=0) {
+			throw std::runtime_error("getaddrinfo() failed, return code: " + std::to_string(k));
+		}
+
+		return res;
 	}
 
 
