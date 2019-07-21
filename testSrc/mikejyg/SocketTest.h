@@ -83,7 +83,7 @@ public:
 	static void testServer(unsigned port) {
 		std::cout << "testServer() " << port << "..." << std::endl;
 
-		ServerSocket serverSocket(port);
+		ServerSocket serverSocket(port, AF_INET);
 
 		std::cout << "available addrinfos:" << std::endl;
 		std::cout << SockaddrUtils::toString( serverSocket.getAddrinfo() ) << std::endl;

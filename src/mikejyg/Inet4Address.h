@@ -47,20 +47,22 @@ public:
 
 	virtual ~Inet4Address() {}
 
+	// TODO: temporary work around for missing inet_ntop
+#ifdef _WIN32
+	virtual std::string toString() const override {
+		return std::string(inet_ntoa(*get()));
+	}
+#else
 	virtual std::string toString() const override {
 		char buf[INET_ADDRSTRLEN];
 		memset(buf, 0xff, INET_ADDRSTRLEN);
 
-		// TODO: temporary work around for missing inet_ntop
-#ifdef _WIN32
-		*buf=0;
-#else
 		inet_ntop(AF_INET, get(), buf, INET_ADDRSTRLEN);
-#endif
 
 		return std::string(buf);
 
 	}
+#endif
 
 };
 

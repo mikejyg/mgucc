@@ -28,7 +28,7 @@ protected:
 public:
 	ServerSocket() : backlog(DEFAULT_BACKLOG) {}
 
-	ServerSocket(unsigned port) : ServerSocket() {
+	ServerSocket(unsigned port, int aiFamilyHint=AF_UNSPEC) : ServerSocket() {
 
 		struct addrinfo hints;
 
@@ -36,7 +36,7 @@ public:
 
 		memset(&hints, 0, sizeof hints);
 
-		hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
+		hints.ai_family = aiFamilyHint;  // use IPv4 or IPv6, whichever
 
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
