@@ -8,8 +8,17 @@
 #ifndef MIKEJYG_STREAMSOCKET_H_
 #define MIKEJYG_STREAMSOCKET_H_
 
-#include <sys/types.h>
+#ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#else
 #include <sys/socket.h>
+#endif
+
+#include <sys/types.h>
 #include "SockaddrUtils.h"
 #include "SocketUtils.h"
 #include "ErrorUtils.h"

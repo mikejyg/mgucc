@@ -8,12 +8,22 @@
 #ifndef MIKEJYG_INETSOCKETADDRESS_H_
 #define MIKEJYG_INETSOCKETADDRESS_H_
 
+#ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#include <netdb.h>
+#endif
+
 #include "SocketAddress.h"
 #include <cstring>
 #include <string>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include "Inet4Address.h"
 #include "Inet6Address.h"
 #include "SockaddrUtils.h"

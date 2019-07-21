@@ -8,12 +8,22 @@
 #ifndef MIKEJYG_SOCKADDRUTILS_H_
 #define MIKEJYG_SOCKADDRUTILS_H_
 
+#ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#include <netdb.h>
+#endif
+
 #include <string>
 #include "Inet4Address.h"
 #include "Inet6Address.h"
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <stdexcept>
 
 namespace mikejyg {

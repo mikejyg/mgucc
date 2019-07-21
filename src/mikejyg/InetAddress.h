@@ -8,11 +8,31 @@
 #ifndef MIKEJYG_INETADDRESS_H_
 #define MIKEJYG_INETADDRESS_H_
 
+
+#ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <winsock2.h>
+
+// mingw is missing this one:
+extern PCSTR WSAAPI inet_ntop(
+  INT        Family,
+  const VOID *pAddr,
+  PSTR       pStringBuf,
+  size_t     StringBufSize
+);
+
+#else
 #include <netinet/in.h>
+#include <netdb.h>
+#endif
+
 #include "FlexPtr.h"
 #include <vector>
 #include <string>
-#include <netdb.h>
 
 namespace mikejyg {
 

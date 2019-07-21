@@ -8,9 +8,18 @@
 #include "mikejyg/SockaddrTest.h"
 #include "mikejyg/SocketTest.h"
 
+#ifdef _WIN32
+#include <mikejyg/WsaService.h>
+#endif
+
 using namespace mikejyg;
 
 int main(int argc, char **argv) {
+
+#ifdef _WIN32
+	WsaService::getInstance();
+#endif
+
 	IntUtils::test();
 
 	SockaddrTest::test();

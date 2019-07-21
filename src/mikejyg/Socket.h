@@ -66,7 +66,12 @@ public:
 	}
 
 	void send(const void *buf, size_t len, int flags=0) {
+#ifdef _WIN32
+		auto k = ::send(sockfd, (char *)buf, len, flags);
+#else
 		auto k = ::send(sockfd, buf, len, flags);
+#endif
+
 		if (k==-1) {
 			throw ErrorUtils::ErrnoException("send() failed:");
 		}
@@ -77,7 +82,11 @@ public:
 	}
 
 	size_t recv(void *buf, size_t len, int flags=0) {
+#ifdef _WIN32
+		auto k = ::recv(sockfd, (char *)buf, len, flags);
+#else
 		auto k = ::recv(sockfd, buf, len, flags);
+#endif
 		if (k==-1) {
 			throw ErrorUtils::ErrnoException("recv() failed:");
 		}

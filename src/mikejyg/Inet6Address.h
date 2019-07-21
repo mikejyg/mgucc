@@ -8,9 +8,19 @@
 #ifndef MIKEJYG_INET6ADDRESS_H_
 #define MIKEJYG_INET6ADDRESS_H_
 
+#ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+
 #include "InetAddress.h"
 #include <cstring>
-#include <arpa/inet.h>
 
 namespace mikejyg {
 
@@ -29,7 +39,13 @@ public:
 	virtual std::string toString() const override {
 		char buf[INET6_ADDRSTRLEN];
 		memset(buf, 0xff, INET6_ADDRSTRLEN);
+
+		// TODO: temporary work around for missing inet_ntop
+#ifdef _WIN32
+		*buf=0;
+#else
 		inet_ntop(AF_INET6, get(), buf, INET6_ADDRSTRLEN);
+#endif
 
 		return std::string(buf);
 

@@ -8,10 +8,24 @@
 #ifndef MIKEJYG_SOCKETADDRESS_H_
 #define MIKEJYG_SOCKETADDRESS_H_
 
-#include "FlexPtr.h"
+#ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
+
+#include "FlexPtr.h"
 #include <cstdint>
 #include "SockaddrUtils.h"
+
+#ifdef _WIN32
+typedef u_short sa_family_t;
+#endif
 
 namespace mikejyg {
 
