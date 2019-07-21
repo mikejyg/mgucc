@@ -29,11 +29,19 @@ public:
 		std::cout << "sizeof(struct sockaddr_in6): " << sizeof(struct sockaddr_in6) << std::endl;
 		std::cout << "sizeof(struct sockaddr_storage): " << sizeof(struct sockaddr_storage) << std::endl;
 
-		InetSocketAddress sockaddr("localhost", 0);
+		InetSocketAddress sockaddr;
+		sockaddr.setAddrinfoSelectFunction([](struct addrinfo const * res){
+			std::cout << "getaddrinfo(): " << std::endl;
+			std::cout << SockaddrUtils::toString(res);
+
+			return InetSocketAddress::selectAddrinfo(res);
+		});
+
+		sockaddr.init("localhost", 0);
 		std::cout << "locahost: " << sockaddr.toString() << std::endl;
 
-		InetSocketAddress sockaddr1("yahoo.com", 0);
-		std::cout << "yahoo.com: " << sockaddr1.toString() << std::endl;
+		sockaddr.init("yahoo.com", 0);
+		std::cout << "yahoo.com: " << sockaddr.toString() << std::endl;
 
 	}
 

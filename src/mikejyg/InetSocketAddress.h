@@ -16,6 +16,8 @@
 #include <netdb.h>
 #include "Inet4Address.h"
 #include "Inet6Address.h"
+#include "SockaddrUtils.h"
+#include <functional>
 
 namespace mikejyg {
 
@@ -29,6 +31,10 @@ namespace mikejyg {
  */
 class InetSocketAddress : public SocketAddress {
 protected:
+
+	std::function< struct addrinfo const * (struct addrinfo const *) > addrinfoSelectFunction;
+
+	/////////////////////////////////////////////////////
 
 	/**
 	 * init with a IPV4 socket address
@@ -44,42 +50,10 @@ protected:
 //		return sockaddrInPtr;
 //	}
 
-public:
-	InetSocketAddress() {}
-
-	virtual ~InetSocketAddress() {}
-
 	/**
-	 * Creates a socket address where the IP address is the wildcard address and the port number a specified value.
-	 *
-	 * This creates a IPV4 address.
+	 * initialize from a struct addrinfo
 	 */
-	InetSocketAddress(unsigned port) {
-		auto * sockaddrInPtr = new struct sockaddr_in;
-		memset(sockaddrInPtr, 0, sizeof(sockaddr_in));
-
-		wrap( (struct sockaddr *) sockaddrInPtr );
-
-		setSaFamily(SocketAddress::Inet);
-		setPort(port);
-
-	}
-
-	/**
-	 * Creates a socket address from a hostname and a port number.
-	 */
-	InetSocketAddress(std::string hostname, unsigned port) {
-		auto portStr = std::to_string(port);
-
-		struct addrinfo *res;
-
-		auto k = getaddrinfo(hostname.c_str(), portStr.c_str(),
-				nullptr, & res);
-
-		if (k!=0) {
-			throw std::runtime_error("getaddrinfo() failed, return code: " + std::to_string(k));
-		}
-
+	void init(struct addrinfo const * addrinfoPtr) {
 //		struct addrinfo {
 //		               int              ai_flags;
 //		               int              ai_family;
@@ -90,20 +64,6 @@ public:
 //		               char            *ai_canonname;
 //		               struct addrinfo *ai_next;
 //		           };
-
-		// find the first addrinfo that is INET
-
-		auto * addrinfoPtr = res;
-		while (addrinfoPtr!=nullptr) {
-			auto aiFamily = addrinfoPtr->ai_family;
-			if (aiFamily==AF_INET || aiFamily==AF_INET6)
-				break;
-
-			addrinfoPtr = addrinfoPtr->ai_next;
-		}
-
-		if (addrinfoPtr==nullptr)
-			throw std::runtime_error("no INET address found.");
 
 		switch (addrinfoPtr->ai_family) {
 		case AF_INET: {
@@ -124,8 +84,58 @@ public:
 
 		}
 
-		freeaddrinfo(res);
+	}
 
+public:
+	InetSocketAddress() : addrinfoSelectFunction([](struct addrinfo const * res){
+		return selectAddrinfo(res); })
+	{}
+
+	virtual ~InetSocketAddress() {}
+
+	/**
+	 * Creates a socket address where the IP address is the wildcard address and the port number a specified value.
+	 *
+	 * This creates a IPV4 address.
+	 */
+	InetSocketAddress(unsigned port) : InetSocketAddress() {
+		auto * sockaddrInPtr = new struct sockaddr_in;
+		memset(sockaddrInPtr, 0, sizeof(sockaddr_in));
+
+		wrap( (struct sockaddr *) sockaddrInPtr );
+
+		setSaFamily(SocketAddress::Inet);
+		setPort(port);
+
+	}
+
+	/**
+	 * Creates a socket address from a hostname and a port number.
+	 */
+	InetSocketAddress(std::string hostname, unsigned port) : InetSocketAddress() {
+		init(hostname, port);
+	}
+
+	/**
+	 * initialize from a hostname and a port number.
+	 */
+	void init(std::string hostname, unsigned port) {
+		auto portStr = std::to_string(port);
+
+		struct addrinfo *res;
+
+		auto k = getaddrinfo(hostname.c_str(), portStr.c_str(),
+				nullptr, & res);
+
+		if (k!=0) {
+			throw std::runtime_error("getaddrinfo() failed, return code: " + std::to_string(k));
+		}
+
+		auto * addrinfoPtr = addrinfoSelectFunction(res);
+
+		init(addrinfoPtr);
+
+		freeaddrinfo(res);
 	}
 
 	void setPort(unsigned port) {
@@ -133,35 +143,34 @@ public:
 	}
 
 	virtual std::string toString() const override {
-		return toString(get());
+		return SockaddrUtils::toString(get());
 	}
 
-	static std::string toString(struct sockaddr const * sockaddrPtr) {
-		std::string str;
+	/**
+	 * set the selection function
+	 */
+	void setAddrinfoSelectFunction(
+			const std::function<const struct addrinfo* (const struct addrinfo*)> &addrinfoSelectFunction) {
+		this->addrinfoSelectFunction = addrinfoSelectFunction;
+	}
 
-		switch (sockaddrPtr->sa_family) {
-		case AF_INET: {
-			auto * inet4SockaddrPtr = (struct sockaddr_in *) sockaddrPtr;
-			Inet4Address inet4Address(&	inet4SockaddrPtr->sin_addr);
-			str = inet4Address.toString();
-			str += ":" + std::to_string( ntohs(inet4SockaddrPtr->sin_port) );
-			break;
+	/**
+	 * select the first addrinfo that is INET
+	 */
+	static struct addrinfo const * selectAddrinfo(struct addrinfo const * res) {
+		auto * addrinfoPtr = res;
+		while (addrinfoPtr!=nullptr) {
+			auto aiFamily = addrinfoPtr->ai_family;
+			if (aiFamily==AF_INET || aiFamily==AF_INET6)
+				break;
+
+			addrinfoPtr = addrinfoPtr->ai_next;
 		}
 
-		case AF_INET6: {
-			auto * inet6SockaddrPtr = (struct sockaddr_in6 *) sockaddrPtr;
-			Inet6Address inet6Address(&	inet6SockaddrPtr->sin6_addr);
-			str = inet6Address.toString();
-			str += ":" + std::to_string( ntohs(inet6SockaddrPtr->sin6_port) );
-			break;
-		}
+		if (addrinfoPtr==nullptr)
+			throw std::runtime_error("no INET address found.");
 
-		default:
-			throw std::runtime_error("unknown sa_family: " + std::to_string(sockaddrPtr->sa_family));
-
-		}
-
-		return str;
+		return addrinfoPtr;
 	}
 
 

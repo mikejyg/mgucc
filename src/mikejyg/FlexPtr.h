@@ -37,7 +37,7 @@ public:
 	/**
 	 * construct a view pointer
 	 */
-	FlexPtr(const T * ptr) : viewPtr(ptr) {}
+	FlexPtr(const T * ptr) : viewPtr( const_cast<T*>(ptr) ) {}
 
 	/**
 	 * construct a view pointer

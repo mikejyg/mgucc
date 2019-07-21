@@ -20,6 +20,8 @@ namespace mikejyg {
 class Inet6Address: public InetAddress {
 public:
 
+	Inet6Address(struct in6_addr const * in6AddrPtr) : InetAddress( (struct in_addr *) in6AddrPtr ) {}
+
 	Inet6Address(struct in6_addr * in6AddrPtr) : InetAddress( (struct in_addr *) in6AddrPtr ) {}
 
 	virtual ~Inet6Address() {}

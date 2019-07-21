@@ -28,6 +28,8 @@ protected:
 
 public:
 
+	InetAddress(struct in_addr const * inAddr) : FlexPtr(inAddr) {}
+
 	InetAddress(struct in_addr * inAddr) : FlexPtr(inAddr) {}
 
 	virtual ~InetAddress() {}

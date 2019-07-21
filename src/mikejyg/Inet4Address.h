@@ -30,6 +30,8 @@ public:
 		wrap(inAddr);
 	}
 
+	Inet4Address(struct in_addr const * inAddr) : InetAddress(inAddr) {}
+
 	Inet4Address(struct in_addr * inAddr) : InetAddress(inAddr) {}
 
 	virtual ~Inet4Address() {}
