@@ -10,6 +10,7 @@
 
 #include "SocketAddress.h"
 #include <unistd.h>
+#include "ErrorUtils.h"
 
 namespace mikejyg {
 

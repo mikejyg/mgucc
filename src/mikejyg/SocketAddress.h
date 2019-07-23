@@ -35,8 +35,10 @@ namespace mikejyg {
  * It holds a pointer to struct sockaddr.
  *
  */
-class SocketAddress : public FlexPtr<struct sockaddr> {
+class SocketAddress {
 public:
+	typedef FlexPtr<struct sockaddr> FlexPtrType;
+
 	enum SaFamily : sa_family_t {
 		Inet = AF_INET	// Internet domain sockets for use with IPv4 addresses.
 		, Inet6 = AF_INET6	// Internet domain sockets for use with IPv6 addresses.
@@ -44,38 +46,81 @@ public:
 		, Unspecified = AF_UNSPEC
 	};
 
-protected:
+private:
+	FlexPtrType sockaddrFptr;
+	int sockaddrLen;
 
 public:
-	SocketAddress() {}
-
-	SocketAddress(SocketAddress && sa2) : FlexPtr(std::forward<FlexPtr>(sa2))
-	{}
-
-	SocketAddress & operator = (SocketAddress && sa2)
-	{
-		 wrap(sa2.uPtr.release());
-		 return *this;
-	}
-
 	virtual ~SocketAddress() {}
 
+	SocketAddress() : sockaddrLen(0) {}
+
+	/**
+	 * move constructor
+	 */
+	SocketAddress(SocketAddress && sa2) 
+		: sockaddrFptr(std::move(sa2.sockaddrFptr)), sockaddrLen(sa2.sockaddrLen)
+	{}
+
+	/**
+	 * move assignment operator
+	 */
+	SocketAddress & operator = (SocketAddress && sa2)
+	{
+		sockaddrFptr=std::move(sa2.sockaddrFptr);
+		sockaddrLen = sa2.sockaddrLen;
+		return *this;
+	}
+
+	/**
+	 * copy constructor
+	 * creates a view.
+	 */
+	SocketAddress(SocketAddress const & sa2) : sockaddrFptr(sa2.sockaddrFptr), sockaddrLen(sa2.sockaddrLen) {}
+
+	/**
+	 * copy assignment operator
+	 * creates a view.
+	 */
+	SocketAddress & operator = (SocketAddress const & sa2) {
+		sockaddrFptr = sa2.sockaddrFptr;
+		sockaddrLen = sa2.sockaddrLen;
+		return *this;
+	}
+
+	/**
+	 * copy the content of a struct sockaddr
+	 */
 	void copy(struct sockaddr const * sockaddr, int size) {
 		auto * newPtr = malloc(size);
 		memcpy(newPtr, sockaddr, size);
-		wrap((struct sockaddr*)newPtr);
+		sockaddrFptr.wrap((struct sockaddr*)newPtr);
+		sockaddrLen=size;
 	}
 
 	SaFamily getSaFamily() {
-		return (SaFamily) get()->sa_family;
+		return (SaFamily) getSockaddr()->sa_family;
 	}
 
 	void setSaFamily(SaFamily saFamily) {
-		get()->sa_family = saFamily;
+		sockaddrFptr.get()->sa_family = saFamily;
+	}
+
+	int getSockaddrLen() const {
+		return sockaddrLen;
 	}
 
 	virtual std::string toString() const {
-		return SockaddrUtils::toString(get());
+		return SockaddrUtils::toString(getSockaddr());
+	}
+
+	void wrap(struct sockaddr * sockaddrPtr, int sockaddrLen) {
+		sockaddrFptr.wrap(sockaddrPtr);
+		this->sockaddrLen = sockaddrLen;
+	}
+
+	struct sockaddr const * getSockaddr() const {
+		return sockaddrFptr.get();
 	}
 
 };

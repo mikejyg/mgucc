@@ -26,6 +26,9 @@ protected:
 	int backlog;
 
 public:
+	virtual ~ServerSocket() {
+	}
+
 	ServerSocket() : backlog(DEFAULT_BACKLOG) {}
 
 	ServerSocket(unsigned port, int aiFamilyHint=AF_UNSPEC) : ServerSocket() {
@@ -62,13 +65,12 @@ public:
 
 		// bind it to the port we passed in to getaddrinfo():
 
-		bind(sockfd, resSel->ai_addr, resSel->ai_addrlen);
+		auto k = ::bind(sockfd, resSel->ai_addr, resSel->ai_addrlen);
+		if (k!=0)
+			throw ErrorUtils::ErrnoException("bind() failed:");
 
 		socketAddress.copy(resSel->ai_addr, resSel->ai_addrlen);
 
-	}
-
-	virtual ~ServerSocket() {
 	}
 
 	void listen() {
@@ -97,17 +99,17 @@ public:
 		case AF_INET: {
 			auto * sockAddr = new struct sockaddr_in;
 			memcpy(sockAddr, sockAddrUptr.get(), sizeof(struct sockaddr_in));
-			socketAddress.wrap( (struct sockaddr*)sockAddr );
+			socketAddress.wrap( (struct sockaddr*)sockAddr, sizeof(struct sockaddr_in) );
 			break;
 		}
 		case AF_INET6: {
 			auto * sockAddr6 = new struct sockaddr_in6;
 			memcpy(sockAddr6, sockAddrUptr.get(), sizeof(struct sockaddr_in6));
-			socketAddress.wrap( (struct sockaddr*)sockAddr6 );
+			socketAddress.wrap( (struct sockaddr*)sockAddr6, sizeof(struct sockaddr_in6) );
 			break;
 		}
 		default:
-			socketAddress.wrap( (struct sockaddr*)sockAddrUptr.release() );
+			socketAddress.wrap( (struct sockaddr*)sockAddrUptr.release(), addr_size );
 		}
 
 		return std::make_tuple(std::move(streamSocket), std::move(socketAddress));

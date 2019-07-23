@@ -36,12 +36,6 @@ public:
 
 	virtual ~Inet6Address() {}
 
-	// TODO: temporary work around for missing inet_ntop
-#ifdef _WIN32
-	virtual std::string toString() const override {
-		return "ipv6_address";
-	}
-#else
 	virtual std::string toString() const override {
 		char buf[INET6_ADDRSTRLEN];
 		memset(buf, 0xff, INET6_ADDRSTRLEN);
@@ -51,7 +45,6 @@ public:
 		return std::string(buf);
 
 	}
-#endif
 
 };
 

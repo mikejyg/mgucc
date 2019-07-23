@@ -22,6 +22,7 @@
 
 #include "InetAddress.h"
 #include <cstring>
+#include <stdexcept>
 
 namespace mikejyg {
 
@@ -47,12 +48,6 @@ public:
 
 	virtual ~Inet4Address() {}
 
-	// TODO: temporary work around for missing inet_ntop
-#ifdef _WIN32
-	virtual std::string toString() const override {
-		return std::string(inet_ntoa(*get()));
-	}
-#else
 	virtual std::string toString() const override {
 		char buf[INET_ADDRSTRLEN];
 		memset(buf, 0xff, INET_ADDRSTRLEN);
@@ -62,7 +57,18 @@ public:
 		return std::string(buf);
 
 	}
+
+	static struct in_addr toInAddr(const char * cp) {
+		struct in_addr inAddr;
+#ifdef _WIN32
+		inAddr.s_addr = inet_addr(cp);
+#else
+		auto k = inet_aton(cp, &inAddr);
+		if (k==0)
+			throw std::runtime_error(std::string("invalid address: ") + cp);
 #endif
+		return inAddr;
+	}
 
 };
 

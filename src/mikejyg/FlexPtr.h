@@ -51,19 +51,16 @@ public:
 
 	/**
 	 * copy constructor
-	 * can only copy a view pointer.
+	 * really just view the original pointer.
 	 */
 	FlexPtr(FlexPtr const & fp2) : viewPtr(fp2.viewPtr) {
-		assert(fp2.uPtr.get()==nullptr);
 	}
 
 	/**
 	 * copy assignment
-	 * can only copy a view pointer.
+	 * really just view the original pointer.
 	 */
 	FlexPtr & operator = (FlexPtr const & fp2) {
-		assert(fp2.uPtr.get()==nullptr);
-
 		uPtr.release();
 		viewPtr = fp2.viewPtr;
 

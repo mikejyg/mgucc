@@ -55,6 +55,16 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<folderInfo id="cdt.managedbuild.config.gnu.lib.debug.852950134.456693444" name="/" resourcePath="glibc">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.lib.debug.2067092362" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.lib.debug" unusedChildren="">
+							<tool id="cdt.managedbuild.tool.gnu.archiver.lib.debug.1588046766" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.lib.debug.812403565"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.lib.debug.756215437" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.lib.debug.2119953929"/>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.lib.debug.1565569746" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.lib.debug.736216105"/>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.771185223" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base.1627074098"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.364580786" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base.940111359"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.lib.debug.1281001348" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.lib.debug.1566656732"/>
+						</toolChain>
+					</folderInfo>
 					<sourceEntries>
 						<entry excluding="src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
@@ -109,7 +119,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="testSrc|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="glibc|testSrc|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="glibc"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="testSrc"/>
 					</sourceEntries>
@@ -170,7 +181,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="glibc|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="glibc"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>
@@ -200,6 +212,7 @@
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="testDebug"/>
+		<configuration configurationName="mingwDebug"/>
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/mgucc"/>
 		</configuration>

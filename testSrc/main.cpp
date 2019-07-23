@@ -7,6 +7,7 @@
 #include <mikejyg/IntUtils.h>
 #include "mikejyg/SockaddrTest.h"
 #include "mikejyg/SocketTest.h"
+#include "mikejyg/DatagramTest.h"
 
 #ifdef _WIN32
 #include <mikejyg/WsaService.h>
@@ -23,6 +24,10 @@ int main(int argc, char **argv) {
 	IntUtils::test();
 
 	SockaddrTest::test();
+
+	DatagramTest::test(49149, 49149);
+
+	exit(0);
 
 	if (argc<2) {
 		std::cout << "missing argument specifying either server (-s) or client (-c)." << std::endl;

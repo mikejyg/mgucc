@@ -18,12 +18,7 @@
 #include <winsock2.h>
 
 // mingw is missing this one:
-extern PCSTR WSAAPI inet_ntop(
-  INT        Family,
-  const VOID *pAddr,
-  PSTR       pStringBuf,
-  size_t     StringBufSize
-);
+extern "C" const char * inet_ntop (int af, const void *src, char *dst, socklen_t size);
 
 #else
 #include <netinet/in.h>

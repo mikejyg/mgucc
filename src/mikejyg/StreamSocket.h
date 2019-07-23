@@ -34,6 +34,8 @@ protected:
 	struct addrinfo * resSel;
 
 public:
+	virtual ~StreamSocket() {}
+
 	StreamSocket() : resSel(nullptr) {}
 
 	StreamSocket(StreamSocket && ss2) : Socket(std::move(ss2)), resSel(nullptr) {
@@ -86,8 +88,6 @@ public:
 
 		SocketUtils::connect(sockfd, resSel->ai_addr, resSel->ai_addrlen);
 	}
-
-	virtual ~StreamSocket() {}
 
 };
 

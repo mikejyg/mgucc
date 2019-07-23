@@ -69,59 +69,62 @@ public:
 		return str;
 	}
 
-	static std::string toString(struct addrinfo const * res) {
+	static std::string toString(struct addrinfo const & ai) {
 		std::string str;
 
-		auto * addrinfoPtr = res;
-		while (addrinfoPtr!=nullptr) {
-			auto aiFamily = addrinfoPtr->ai_family;
+		auto aiFamily = ai.ai_family;
 
-			switch (aiFamily) {
-			case AF_INET:
-			case AF_INET6:
-				str += toString( addrinfoPtr->ai_addr );
-				break;
+		switch (aiFamily) {
+		case AF_INET:
+		case AF_INET6:
+			str += toString( ai.ai_addr );
+			break;
 
-			default:
-				str += "unknown ai_family: " + std::to_string(aiFamily);
-			}
+		default:
+			str += "unknown ai_family: " + std::to_string(aiFamily);
+		}
 
-			switch (addrinfoPtr->ai_socktype) {
-			case SOCK_DGRAM:
-				str += ", SOCK_DGRAM"; break;
+		switch (ai.ai_socktype) {
+		case SOCK_DGRAM:
+			str += ", SOCK_DGRAM"; break;
 
-			case SOCK_STREAM:
-				str += ", SOCK_STREAM"; break;
+		case SOCK_STREAM:
+			str += ", SOCK_STREAM"; break;
 
-			case SOCK_RAW:
-				str += ", SOCK_RAW"; break;
+		case SOCK_RAW:
+			str += ", SOCK_RAW"; break;
 
-			default:
-				str += ", unknown socktype: " + std::to_string(addrinfoPtr->ai_socktype); break;
-			}
+		default:
+			str += ", unknown socktype: " + std::to_string(ai.ai_socktype); break;
+		}
 
-			switch (addrinfoPtr->ai_protocol) {
-			case IPPROTO_TCP:
-				str += ", IPPROTO_TCP"; break;
-			case IPPROTO_UDP:
-				str += ", IPPROTO_UDP"; break;
-			case IPPROTO_IP:
-				str += ", IPPROTO_IP"; break;
-			default:
-				str += ", unknown protocol: " + std::to_string(addrinfoPtr->ai_protocol); break;
-			}
+		switch (ai.ai_protocol) {
+		case IPPROTO_TCP:
+			str += ", IPPROTO_TCP"; break;
+		case IPPROTO_UDP:
+			str += ", IPPROTO_UDP"; break;
+		case IPPROTO_IP:
+			str += ", IPPROTO_IP"; break;
+		default:
+			str += ", unknown protocol: " + std::to_string(ai.ai_protocol); break;
+		}
 
-			if ( addrinfoPtr->ai_canonname != nullptr ) {
-				str += ", ";
-				str += addrinfoPtr->ai_canonname;
-			}
-
-			str += "\n";
-			addrinfoPtr=addrinfoPtr->ai_next;
+		if ( ai.ai_canonname != nullptr ) {
+			str += ", ";
+			str += ai.ai_canonname;
 		}
 
 		return str;
+	}
 
+	static std::string toString(struct addrinfo const * res) {
+		std::string str;
+		while (res) {
+			str += toString(*res);
+			str += "\n";
+			res=res->ai_next;
+		}
+		return str;
 	}
 
 	static struct addrinfo * getaddrinfo (const char * hostname, unsigned port, const struct addrinfo * hint) {
@@ -138,6 +141,14 @@ public:
 		return res;
 	}
 
+	static struct addrinfo const * selectAddrinfo(struct addrinfo const * res, int af_family) {
+		while (res!=nullptr) {
+			if (res->ai_family==af_family)
+				break;
+			res=res->ai_next;
+		}
+		return res;
+	}
 
 };
 

@@ -30,18 +30,19 @@ public:
 		std::cout << "sizeof(struct sockaddr_storage): " << sizeof(struct sockaddr_storage) << std::endl;
 
 		InetSocketAddress sockaddr;
-		sockaddr.setAddrinfoSelectFunction([](struct addrinfo const * res){
-			std::cout << "getaddrinfo(): " << std::endl;
-			std::cout << SockaddrUtils::toString(res);
-
-			return InetSocketAddress::selectAddrinfo(res);
-		});
 
 		std::cout << "locahost:" << std::endl;
 		sockaddr.init("localhost", 0);
+		std::cout << SockaddrUtils::toString( sockaddr.getAddrinfo() );
 
 		std::cout << "yahoo.com:" << std::endl;
 		sockaddr.init("yahoo.com", 0);
+		std::cout << SockaddrUtils::toString( sockaddr.getAddrinfo() );
+
+		// test Inet4Address::toInAddr
+		auto inAddr = Inet4Address::toInAddr("127.0.0.1");
+		std::cout << "s_addr of 127.0.0.1: 0x" << std::hex << inAddr.s_addr << std::endl;
+		assert( inAddr.s_addr == htonl(127*256*256*256+1) );
 
 	}
 

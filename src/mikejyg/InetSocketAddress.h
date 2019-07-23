@@ -40,9 +40,14 @@ namespace mikejyg {
  *
  */
 class InetSocketAddress : public SocketAddress {
-protected:
+private:
 
 	std::function< struct addrinfo const * (struct addrinfo const *) > addrinfoSelectFunction;
+
+	// working variables
+	
+	// saved getaddrinfo return
+	struct addrinfo * res;
 
 	/////////////////////////////////////////////////////
 
@@ -79,14 +84,14 @@ protected:
 		case AF_INET: {
 			auto * sockaddrInPtr = new struct sockaddr_in;
 			memcpy(sockaddrInPtr, addrinfoPtr->ai_addr, addrinfoPtr->ai_addrlen);
-			wrap( (struct sockaddr *) sockaddrInPtr );
+			wrap( (struct sockaddr *) sockaddrInPtr, sizeof(struct sockaddr_in) );
 			break;
 		}
 
 		case AF_INET6: {
 			auto * sockaddrInPtr = new struct sockaddr_in6;
 			memcpy(sockaddrInPtr, addrinfoPtr->ai_addr, addrinfoPtr->ai_addrlen);
-			wrap( (struct sockaddr *) sockaddrInPtr );
+			wrap( (struct sockaddr *) sockaddrInPtr, sizeof(struct sockaddr_in6) );
 			break;
 		}
 
@@ -97,11 +102,14 @@ protected:
 	}
 
 public:
-	InetSocketAddress() : addrinfoSelectFunction([](struct addrinfo const * res){
-		return selectAddrinfo(res); })
+	InetSocketAddress() : addrinfoSelectFunction(selectAddrinfo)
+		, res(nullptr)
 	{}
 
-	virtual ~InetSocketAddress() {}
+	virtual ~InetSocketAddress() {
+		if (res)
+			freeaddrinfo(res);
+	}
 
 	/**
 	 * Creates a socket address where the IP address is the wildcard address and the port number a specified value.
@@ -112,7 +120,7 @@ public:
 		auto * sockaddrInPtr = new struct sockaddr_in;
 		memset(sockaddrInPtr, 0, sizeof(sockaddr_in));
 
-		wrap( (struct sockaddr *) sockaddrInPtr );
+		wrap( (struct sockaddr *) sockaddrInPtr, sizeof(struct sockaddr_in) );
 
 		setSaFamily(SocketAddress::Inet);
 		setPort(port);
@@ -130,17 +138,18 @@ public:
 	 * initialize from a hostname and a port number.
 	 */
 	void init(std::string hostname, unsigned port) {
-		auto * res = SockaddrUtils::getaddrinfo(hostname.c_str(), port, nullptr);
+		if (res)
+			freeaddrinfo(res);
 
-		auto * addrinfoPtr = addrinfoSelectFunction(res);
+		res = SockaddrUtils::getaddrinfo(hostname.c_str(), port, nullptr);
 
-		init(addrinfoPtr);
+		auto * selRes = addrinfoSelectFunction(res);
 
-		freeaddrinfo(res);
+		init(selRes);
 	}
 
 	void setPort(unsigned port) {
-		((struct sockaddr_in *)get())->sin_port = htons(port);
+		((struct sockaddr_in *)getSockaddr())->sin_port = htons(port);
 	}
 
 	/**
@@ -152,22 +161,23 @@ public:
 	}
 
 	/**
-	 * select the first addrinfo that is INET
+	 * select the first addrinfo that is INET or INET6
+	 * returns nullptr if not found
 	 */
 	static struct addrinfo const * selectAddrinfo(struct addrinfo const * res) {
-		auto * addrinfoPtr = res;
-		while (addrinfoPtr!=nullptr) {
-			auto aiFamily = addrinfoPtr->ai_family;
+		while (res!=nullptr) {
+			auto aiFamily = res->ai_family;
 			if (aiFamily==AF_INET || aiFamily==AF_INET6)
 				break;
 
-			addrinfoPtr = addrinfoPtr->ai_next;
+			res = res->ai_next;
 		}
 
-		if (addrinfoPtr==nullptr)
-			throw std::runtime_error("no INET address found.");
+		return res;
+	}
 
-		return addrinfoPtr;
+	struct addrinfo const * getAddrinfo() const {
+		return res;
 	}
 
 
