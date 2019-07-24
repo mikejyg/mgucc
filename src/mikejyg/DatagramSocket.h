@@ -9,6 +9,8 @@
 
 #include "Socket.h"
 #include "DatagramPacket.h"
+#include "InetSocketAddress.h"
+#include "SocketUtils.h"
 
 namespace mikejyg {
 
@@ -22,10 +24,21 @@ private:
 public:
 	virtual ~DatagramSocket() {}
 
+	DatagramSocket(unsigned port, InetAddress const & inetAddress) : resSel(nullptr) {
+		InetSocketAddress socketAddress(inetAddress, port);
+		sockfd = socket(socketAddress.getSaFamily(), SOCK_DGRAM, 0);
+
+		auto k = ::bind(sockfd, socketAddress.getSockaddr(), socketAddress.getSockaddrLen());
+		if (k!=0)
+			throw ErrorUtils::ErrnoException("bind() failed:");
+
+		this->socketAddress = SocketUtils::getsockname(sockfd);
+	}
+
 	/**
 	 * Constructs a datagram socket and binds it to the specified port on the local host machine.
 	 */
-	DatagramSocket(unsigned port, int aiFamilyHint) {
+	DatagramSocket(unsigned port, int aiFamilyHint) : resSel(nullptr) {
 		struct addrinfo hints;
 
 		// first, load up address structs with getaddrinfo():
@@ -52,7 +65,7 @@ public:
 		if (k!=0)
 			throw ErrorUtils::ErrnoException("bind() failed:");
 
-		socketAddress.copy(resSel->ai_addr, resSel->ai_addrlen);
+		this->socketAddress = SocketUtils::getsockname(sockfd);
 
 	}
 
@@ -96,8 +109,8 @@ public:
 		packet.copySockaddr((struct sockaddr *)&sockaddrStorage, sockaddrLen);
 	}
 
-	struct addrinfo const & getSelectedAddrinfo() const {
-		return *resSel;
+	struct addrinfo const * getSelectedAddrinfo() const {
+		return resSel;
 	}
 
 };

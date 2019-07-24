@@ -22,6 +22,8 @@
 #include <sys/types.h>
 #include <stdexcept>
 #include "ErrorUtils.h"
+#include "SocketAddress.h"
+#include "InetSocketAddress.h"
 
 namespace mikejyg {
 
@@ -36,6 +38,21 @@ public:
 			throw ErrorUtils::ErrnoException("connect() failed:");
 		}
 	}
+
+	static SocketAddress getsockname(int sockfd) {
+		struct sockaddr_storage address;
+		socklen_t address_len = sizeof(struct sockaddr_storage);
+
+		auto k = ::getsockname(sockfd, (struct sockaddr*)&address, &address_len);
+		if (k!=0)
+			throw ErrorUtils::ErrnoException("getsockname() failed:");
+
+		SocketAddress sockaddr;
+		sockaddr.copy((struct sockaddr*)&address, address_len);
+		return sockaddr;
+
+	}
+
 
 };
 

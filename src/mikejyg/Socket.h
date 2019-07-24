@@ -37,8 +37,12 @@ public:
 
 	Socket & operator = (Socket && s2) {
 		sockfd=s2.sockfd;
-		socketAddress=std::move(s2.socketAddress);
 		s2.sockfd=-1;
+
+		socketAddress=std::move(s2.socketAddress);
+
+		res=s2.res;
+		s2.res=nullptr;
 		return *this;
 	}
 

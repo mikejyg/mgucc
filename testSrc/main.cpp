@@ -4,14 +4,17 @@
  * Author: mikejyg
  */
 
+#ifdef _WIN32
+#include <mikejyg/WsaService.h>
+#endif
+
 #include <mikejyg/IntUtils.h>
 #include "mikejyg/SockaddrTest.h"
 #include "mikejyg/SocketTest.h"
 #include "mikejyg/DatagramTest.h"
-
-#ifdef _WIN32
-#include <mikejyg/WsaService.h>
-#endif
+#include "mikejyg/MulticastTest.h"
+#include "mikejyg/AdapterInfo.h"
+#include <mikejyg/OstreamBuilder.h>
 
 using namespace mikejyg;
 
@@ -25,12 +28,28 @@ int main(int argc, char **argv) {
 
 	SockaddrTest::test();
 
-	DatagramTest::test(49149, 49149);
+#ifdef _WIN32
+	AdapterInfo::ipconfig();
+
+	AdapterInfo::getAdaptersAddresses();
+#endif
+
+//	MulticastTest::getAdaptersAddresses();
+
+	if (argc<3) {
+		std::cout << "please provide arguments: multicast_group_ip interface_ip" << std::endl;
+		exit(1);
+	}
+
+	// group IP, interface IP
+	MulticastTest::test(argv[1], argv[2]);
+
+	DatagramTest::test(argv[2]);
 
 	exit(0);
 
 	if (argc<2) {
-		std::cout << "missing argument specifying either server (-s) or client (-c)." << std::endl;
+		CoutBuilder::builder("missing argument specifying either server (-s) or client (-c).")->out();
 		exit(1);
 	}
 

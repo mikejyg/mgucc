@@ -55,16 +55,6 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="cdt.managedbuild.config.gnu.lib.debug.852950134.456693444" name="/" resourcePath="glibc">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.lib.debug.2067092362" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.lib.debug" unusedChildren="">
-							<tool id="cdt.managedbuild.tool.gnu.archiver.lib.debug.1588046766" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.lib.debug.812403565"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.lib.debug.756215437" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.lib.debug.2119953929"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.compiler.lib.debug.1565569746" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.lib.debug.736216105"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.771185223" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base.1627074098"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.364580786" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base.940111359"/>
-							<tool id="cdt.managedbuild.tool.gnu.assembler.lib.debug.1281001348" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.lib.debug.1566656732"/>
-						</toolChain>
-					</folderInfo>
 					<sourceEntries>
 						<entry excluding="src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
@@ -171,6 +161,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.base.1950472688" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.base">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.595433563" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="iphlpapi"/>
 									<listOptionValue builtIn="false" value="ws2_32"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.449889063" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">

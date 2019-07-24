@@ -12,7 +12,10 @@
 #include <iostream>
 #include <mikejyg/SockaddrUtils.h>
 #include <mikejyg/InetSocketAddress.h>
+#include <mikejyg/OstreamBuilder.h>
 #include <thread>
+#include <mikejyg/SocketUtils.h>
+#include <climits>
 
 namespace mikejyg {
 
@@ -20,22 +23,11 @@ class DatagramTest {
 public:
 	static const int MAX_DATAGRAM_SIZE = 65507;
 
-public:
-	DatagramTest();
-	virtual ~DatagramTest();
+	static const int testRounds = 10;	// INT_MAX;
 
-	static void test(int port, int peerPort) {
-		std::cout << "DatagramTest::test()..." << std::endl;
+	//////////////////////////////////////////////
 
-		int testRounds = 10;
-
-		DatagramSocket datagramSocket(port, AF_INET);
-
-		std::cout << "available sockaddrs:" << std::endl;
-		std::cout << SockaddrUtils::toString(datagramSocket.getAddrinfo()) << std::endl;
-
-		std::cout << "selected sockaddr: " << SockaddrUtils::toString(datagramSocket.getSelectedAddrinfo()) << std::endl;
-
+	static std::thread runReceiveThread(DatagramSocket & datagramSocket) {
 		std::thread receiveThread([&](){
 			int cnt=0;
 			while (cnt < testRounds) {
@@ -43,12 +35,56 @@ public:
 				DatagramPacket packet(buf, MAX_DATAGRAM_SIZE);
 				datagramSocket.receive(packet);
 
-				std::cout << "received: " << std::string(packet.getBuf(), packet.getLength());
-				std::cout << ", from: " << packet.getSocketAddress().toString() << std::endl;
+				CoutBuilder::builder("received: ")->build(std::string(packet.getBuf(), packet.getLength()))
+					.build(", from: ").build(packet.getSocketAddress().toString()).out();
 
 				cnt++;
 			}
 		});
+
+		return receiveThread;
+
+	}
+
+	static void sendMessages(DatagramSocket & datagramSocket, InetSocketAddress const & socketAddress) {
+		int cnt=0;
+
+		while (cnt < testRounds) {
+			std::string msg("hello " + std::to_string(cnt++));
+			DatagramPacket packet(msg.c_str(), msg.length(), socketAddress);
+			datagramSocket.send(packet);
+
+			CoutBuilder::builder("sent: ")->build(msg).build(", to: ").build(packet.getSocketAddress().toString()).out();
+
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+
+	}
+
+public:
+	DatagramTest() {}
+	virtual ~DatagramTest() {}
+
+	static void test(std::string const & interfaceIpStr) {
+		std::cout << "DatagramTest::test()..." << std::endl;
+
+		// wildcard address
+//		DatagramSocket datagramSocket(AF_INET);
+
+		Inet4Address ifAddr(interfaceIpStr.c_str());
+		DatagramSocket datagramSocket(0, ifAddr);
+
+		std::cout << "available sockaddrs:" << std::endl;
+		std::cout << SockaddrUtils::toString(datagramSocket.getAddrinfo()) << std::endl;
+
+		if (datagramSocket.getSelectedAddrinfo()!=nullptr)
+			std::cout << "selected sockaddr: " << SockaddrUtils::toString( * datagramSocket.getSelectedAddrinfo() ) << std::endl;
+
+		auto ownSockaddr = SocketUtils::getsockname(datagramSocket.getSockfd());
+		std::cout << "local sockaddr: " << ownSockaddr.toString() << std::endl;
+		auto peerPort = static_cast<InetSocketAddress>(ownSockaddr).getPort();
+
+		auto receiveThread = runReceiveThread(datagramSocket);
 
 		// sender
 
@@ -56,19 +92,10 @@ public:
 		socketAddress.setAddrinfoSelectFunction([](struct addrinfo const * res){
 			return SockaddrUtils::selectAddrinfo(res, AF_INET);
 		});
-		socketAddress.init("localhost", peerPort);
+		socketAddress.init(interfaceIpStr, peerPort);
 		std::cout << "destination socketAddress: " << socketAddress.toString() << std::endl;
 
-		int cnt=0;
-
-		while (cnt < testRounds) {
-			std::string msg("hello " + std::to_string(cnt++));
-			DatagramPacket packet(msg.c_str(), msg.length(), socketAddress);
-			datagramSocket.send(packet);
-			std::cout << "sent: " << msg << ", to: " << packet.getSocketAddress().toString() << std::endl;
-
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-		}
+		sendMessages(datagramSocket, socketAddress);
 
 		receiveThread.join();
 

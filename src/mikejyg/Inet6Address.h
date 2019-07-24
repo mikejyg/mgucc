@@ -46,6 +46,19 @@ public:
 
 	}
 
+	virtual std::unique_ptr<struct sockaddr> toStructSockaddr() const override {
+		auto * sockaddrPtr = new struct sockaddr_in6;
+		memset( sockaddrPtr, 0, sizeof(struct sockaddr_in6) );
+		sockaddrPtr->sin6_family=AF_INET6;
+		memcpy( & sockaddrPtr->sin6_addr, get(), sizeof(struct in6_addr) );
+		return std::unique_ptr<struct sockaddr>( (struct sockaddr*)sockaddrPtr );
+	}
+
+	virtual unsigned getStructSockaddrLen() const override {
+		return sizeof(struct sockaddr_in6);
+	}
+
+
 };
 
 } /* namespace mikejyg */

@@ -41,8 +41,8 @@ public:
 
 		// test Inet4Address::toInAddr
 		auto inAddr = Inet4Address::toInAddr("127.0.0.1");
-		std::cout << "s_addr of 127.0.0.1: 0x" << std::hex << inAddr.s_addr << std::endl;
-		assert( inAddr.s_addr == htonl(127*256*256*256+1) );
+		std::cout << "s_addr of 127.0.0.1: 0x" << std::hex << inAddr->s_addr << std::endl;
+		assert( inAddr->s_addr == htonl(127*256*256*256+1) );
 
 	}
 

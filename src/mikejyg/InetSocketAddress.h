@@ -112,6 +112,12 @@ public:
 	}
 
 	/**
+	 * create a view class, based on a given struct sockaddr.
+	 */
+	InetSocketAddress(struct sockaddr const * sockaddr, int size) : SocketAddress(sockaddr, size), res(nullptr)
+	{}
+
+	/**
 	 * Creates a socket address where the IP address is the wildcard address and the port number a specified value.
 	 *
 	 * This creates a IPV4 address.
@@ -135,6 +141,24 @@ public:
 	}
 
 	/**
+	 * construct a view object.
+	 */
+	InetSocketAddress(SocketAddress const & socketAddress) : SocketAddress(socketAddress), res(nullptr) {
+		// verify
+		if (getSaFamily()!=SocketAddress::Inet && getSaFamily()!=SocketAddress::Inet6)
+			throw std::runtime_error("InetSocketAddress() socketAddress is not inet.");
+	}
+
+	/**
+	 * construct from a given InetAddress and a port.
+	 */
+	InetSocketAddress(const InetAddress & inetAddr, unsigned port) : res(nullptr)
+	{
+		wrap( inetAddr.toStructSockaddr().release(), inetAddr.getStructSockaddrLen() );
+		setPort(port);
+	}
+
+	/**
 	 * initialize from a hostname and a port number.
 	 */
 	void init(std::string hostname, unsigned port) {
@@ -146,6 +170,10 @@ public:
 		auto * selRes = addrinfoSelectFunction(res);
 
 		init(selRes);
+	}
+
+	unsigned getPort() const {
+		return ntohs( ((struct sockaddr_in *)getSockaddr())->sin_port );
 	}
 
 	void setPort(unsigned port) {

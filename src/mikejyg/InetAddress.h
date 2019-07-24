@@ -28,6 +28,7 @@ extern "C" const char * inet_ntop (int af, const void *src, char *dst, socklen_t
 #include "FlexPtr.h"
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace mikejyg {
 
@@ -50,6 +51,16 @@ public:
 	virtual ~InetAddress() {}
 
 	virtual std::string toString() const = 0;
+
+	/**
+	 * make a matching struct sockaddr.
+	 */
+	virtual std::unique_ptr<struct sockaddr> toStructSockaddr() const=0;
+
+	/**
+	 * length of the matching struct sockaddr
+	 */
+	virtual unsigned getStructSockaddrLen() const=0;
 
 };
 

@@ -89,6 +89,12 @@ public:
 	}
 
 	/**
+	 * create a view class, based on a given struct sockaddr.
+	 */
+	SocketAddress(struct sockaddr const * sockaddr, int size) : sockaddrFptr(sockaddr), sockaddrLen(size)
+	{}
+
+	/**
 	 * copy the content of a struct sockaddr
 	 */
 	void copy(struct sockaddr const * sockaddr, int size) {
