@@ -141,7 +141,7 @@ public:
 		return res;
 	}
 
-	static struct addrinfo const * selectAddrinfo(struct addrinfo const * res, int af_family) {
+	static struct addrinfo const * selectAddrinfoByFamily(struct addrinfo const * res, int af_family) {
 		while (res!=nullptr) {
 			if (res->ai_family==af_family)
 				break;

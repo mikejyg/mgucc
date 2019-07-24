@@ -44,26 +44,7 @@ private:
 
 	std::function< struct addrinfo const * (struct addrinfo const *) > addrinfoSelectFunction;
 
-	// working variables
-	
-	// saved getaddrinfo return
-	struct addrinfo * res;
-
 	/////////////////////////////////////////////////////
-
-	/**
-	 * init with a IPV4 socket address
-	 */
-//	struct sockaddr_in * initStructSockaddrIn() {
-//		auto * sockaddrInPtr = new struct sockaddr_in;
-//		memset(sockaddrInPtr, 0, sizeof(sockaddr_in));
-//
-//		wrap( (struct sockaddr *) sockaddrInPtr );
-//
-//		setSaFamily(SocketAddress::Inet);
-//
-//		return sockaddrInPtr;
-//	}
 
 	/**
 	 * initialize from a struct addrinfo
@@ -102,19 +83,11 @@ private:
 	}
 
 public:
-	InetSocketAddress() : addrinfoSelectFunction(selectAddrinfo)
-		, res(nullptr)
+	InetSocketAddress() :
+		addrinfoSelectFunction([](struct addrinfo const * res){ return res;})	// default, just select the first one
 	{}
 
-	virtual ~InetSocketAddress() {
-		if (res)
-			freeaddrinfo(res);
-	}
-
-	/**
-	 * create a view class, based on a given struct sockaddr.
-	 */
-	InetSocketAddress(struct sockaddr const * sockaddr, int size) : SocketAddress(sockaddr, size), res(nullptr)
+	virtual ~InetSocketAddress()
 	{}
 
 	/**
@@ -130,42 +103,32 @@ public:
 
 		setSaFamily(SocketAddress::Inet);
 		setPort(port);
-
-	}
-
-	/**
-	 * Creates a socket address from a hostname and a port number.
-	 */
-	InetSocketAddress(std::string hostname, unsigned port) : InetSocketAddress() {
-		init(hostname, port);
-	}
-
-	/**
-	 * construct a view object.
-	 */
-	InetSocketAddress(SocketAddress const & socketAddress) : SocketAddress(socketAddress), res(nullptr) {
-		// verify
-		if (getSaFamily()!=SocketAddress::Inet && getSaFamily()!=SocketAddress::Inet6)
-			throw std::runtime_error("InetSocketAddress() socketAddress is not inet.");
 	}
 
 	/**
 	 * construct from a given InetAddress and a port.
 	 */
-	InetSocketAddress(const InetAddress & inetAddr, unsigned port) : res(nullptr)
+	InetSocketAddress(const InetAddress & inetAddr, unsigned port)
 	{
 		wrap( inetAddr.toStructSockaddr().release(), inetAddr.getStructSockaddrLen() );
 		setPort(port);
 	}
 
 	/**
+	 * construct a view object.
+	 * This is for casting SocketAddress to InetSocketAddress.
+	 */
+	InetSocketAddress(SocketAddress const & socketAddress) : SocketAddress(socketAddress) {
+		// verify
+		if (getSaFamily()!=SocketAddress::Inet && getSaFamily()!=SocketAddress::Inet6)
+			throw std::runtime_error("InetSocketAddress() socketAddress is not inet.");
+	}
+
+	/**
 	 * initialize from a hostname and a port number.
 	 */
 	void init(std::string hostname, unsigned port) {
-		if (res)
-			freeaddrinfo(res);
-
-		res = SockaddrUtils::getaddrinfo(hostname.c_str(), port, nullptr);
+		auto res = SockaddrUtils::getaddrinfo(hostname.c_str(), port, nullptr);
 
 		auto * selRes = addrinfoSelectFunction(res);
 
@@ -186,26 +149,6 @@ public:
 	void setAddrinfoSelectFunction(
 			const std::function<const struct addrinfo* (const struct addrinfo*)> &addrinfoSelectFunction) {
 		this->addrinfoSelectFunction = addrinfoSelectFunction;
-	}
-
-	/**
-	 * select the first addrinfo that is INET or INET6
-	 * returns nullptr if not found
-	 */
-	static struct addrinfo const * selectAddrinfo(struct addrinfo const * res) {
-		while (res!=nullptr) {
-			auto aiFamily = res->ai_family;
-			if (aiFamily==AF_INET || aiFamily==AF_INET6)
-				break;
-
-			res = res->ai_next;
-		}
-
-		return res;
-	}
-
-	struct addrinfo const * getAddrinfo() const {
-		return res;
 	}
 
 

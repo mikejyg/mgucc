@@ -90,7 +90,7 @@ public:
 
 		InetSocketAddress socketAddress;
 		socketAddress.setAddrinfoSelectFunction([](struct addrinfo const * res){
-			return SockaddrUtils::selectAddrinfo(res, AF_INET);
+			return SockaddrUtils::selectAddrinfoByFamily(res, AF_INET);
 		});
 		socketAddress.init(interfaceIpStr, peerPort);
 		std::cout << "destination socketAddress: " << socketAddress.toString() << std::endl;
