@@ -40,10 +40,7 @@ namespace mikejyg {
  *
  */
 class InetSocketAddress : public SocketAddress {
-private:
-
-	std::function< struct addrinfo const * (struct addrinfo const *) > addrinfoSelectFunction;
-
+protected:
 	/////////////////////////////////////////////////////
 
 	/**
@@ -83,9 +80,7 @@ private:
 	}
 
 public:
-	InetSocketAddress() :
-		addrinfoSelectFunction([](struct addrinfo const * res){ return res;})	// default, just select the first one
-	{}
+	InetSocketAddress() {}
 
 	virtual ~InetSocketAddress()
 	{}
@@ -95,13 +90,13 @@ public:
 	 *
 	 * This creates a IPV4 address.
 	 */
-	InetSocketAddress(unsigned port) : InetSocketAddress() {
+	InetSocketAddress(unsigned port) {
 		auto * sockaddrInPtr = new struct sockaddr_in;
 		memset(sockaddrInPtr, 0, sizeof(sockaddr_in));
 
 		wrap( (struct sockaddr *) sockaddrInPtr, sizeof(struct sockaddr_in) );
 
-		setSaFamily(SocketAddress::Inet);
+		setSaFamily(SocketAddress::INET);
 		setPort(port);
 	}
 
@@ -110,29 +105,43 @@ public:
 	 */
 	InetSocketAddress(const InetAddress & inetAddr, unsigned port)
 	{
+		init(inetAddr, port);
+	}
+
+	/**
+	 * it calls init().
+	 */
+	template<typename F>
+	InetSocketAddress(std::string const & hostname, unsigned port
+			, F && addrinfoSelectFunction = [](struct addrinfo const * res){ return res;} ) {
+		init(hostname, port, std::forward<F>(addrinfoSelectFunction));
+	}
+
+	void init(const InetAddress & inetAddr, unsigned port)
+	{
 		wrap( inetAddr.toStructSockaddr().release(), inetAddr.getStructSockaddrLen() );
 		setPort(port);
 	}
 
 	/**
-	 * construct a view object.
-	 * This is for casting SocketAddress to InetSocketAddress.
-	 */
-	InetSocketAddress(SocketAddress const & socketAddress) : SocketAddress(socketAddress) {
-		// verify
-		if (getSaFamily()!=SocketAddress::Inet && getSaFamily()!=SocketAddress::Inet6)
-			throw std::runtime_error("InetSocketAddress() socketAddress is not inet.");
-	}
-
-	/**
 	 * initialize from a hostname and a port number.
+	 *
+	 * no hint is used.
+	 *
+	 * addrinfoSelectFunction selects a addrinfo * from a linked list of addrinfo *.
+	 * 	 the type should be std::function< struct addrinfo const * (struct addrinfo const *) >
+	 *
 	 */
-	void init(std::string hostname, unsigned port) {
-		auto res = SockaddrUtils::getaddrinfo(hostname.c_str(), port, nullptr);
+	template<typename F>
+	void init(std::string const & hostname, unsigned port
+			, F && addrinfoSelectFunction = [](struct addrinfo const * res){ return res;} ) {
+		auto * res = AddrinfoUtils::getaddrinfo(hostname.c_str(), port, nullptr);
 
 		auto * selRes = addrinfoSelectFunction(res);
 
 		init(selRes);
+
+		freeaddrinfo(res);
 	}
 
 	unsigned getPort() const {
@@ -141,14 +150,6 @@ public:
 
 	void setPort(unsigned port) {
 		((struct sockaddr_in *)getSockaddr())->sin_port = htons(port);
-	}
-
-	/**
-	 * set the selection function
-	 */
-	void setAddrinfoSelectFunction(
-			const std::function<const struct addrinfo* (const struct addrinfo*)> &addrinfoSelectFunction) {
-		this->addrinfoSelectFunction = addrinfoSelectFunction;
 	}
 
 

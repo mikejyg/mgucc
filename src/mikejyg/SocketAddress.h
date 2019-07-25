@@ -40,10 +40,10 @@ public:
 	typedef FlexPtr<struct sockaddr> FlexPtrType;
 
 	enum SaFamily : sa_family_t {
-		Inet = AF_INET	// Internet domain sockets for use with IPv4 addresses.
-		, Inet6 = AF_INET6	// Internet domain sockets for use with IPv6 addresses.
-		, Unix = AF_UNIX	// UNIX domain sockets.
-		, Unspecified = AF_UNSPEC
+		INET = AF_INET	// Internet domain sockets for use with IPv4 addresses.
+		, INET6 = AF_INET6	// Internet domain sockets for use with IPv6 addresses.
+		, UNIX = AF_UNIX	// UNIX domain sockets.
+		, UNSPECIFIED = AF_UNSPEC
 	};
 
 private:
@@ -104,7 +104,7 @@ public:
 		sockaddrLen=size;
 	}
 
-	SaFamily getSaFamily() {
+	SaFamily getSaFamily() const {
 		return (SaFamily) getSockaddr()->sa_family;
 	}
 

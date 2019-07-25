@@ -62,6 +62,8 @@ public:
 	 */
 	virtual unsigned getStructSockaddrLen() const=0;
 
+	virtual void copy(struct in_addr const * inAddr) = 0;
+
 };
 
 }	// namespace

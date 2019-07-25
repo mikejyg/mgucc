@@ -8,6 +8,7 @@
 #ifndef MIKEJYG_SOCKET_H_
 #define MIKEJYG_SOCKET_H_
 
+#include "sockfdDefs.h"
 #include "SocketAddress.h"
 #include <unistd.h>
 #include "ErrorUtils.h"
@@ -19,51 +20,22 @@ namespace mikejyg {
  */
 class Socket {
 protected:
-	int sockfd;
 
-	// working variables
+	SockFdType sockfd;
 
 	SocketAddress socketAddress;
 
-	struct addrinfo * res;
-
 public:
-	Socket() : sockfd(-1), res(nullptr) {}
-
-	Socket(Socket && s2) : sockfd(s2.sockfd), socketAddress(std::move(s2.socketAddress)), res(s2.res) {
-		s2.sockfd=-1;
-		s2.res=nullptr;
-	}
-
-	Socket & operator = (Socket && s2) {
-		sockfd=s2.sockfd;
-		s2.sockfd=-1;
-
-		socketAddress=std::move(s2.socketAddress);
-
-		res=s2.res;
-		s2.res=nullptr;
-		return *this;
-	}
-
-	Socket(Socket const &) = delete;
-
-	virtual ~Socket() {
-		// auto close
-		if (sockfd!=-1)
-			close();
-
-		if (res!=nullptr)
-			freeaddrinfo(res);
-	}
-
-	void wrap(int sockfd) {
-		this->sockfd = sockfd;
-	}
+	Socket(SockFdType sockfd=INVALID_SOCKET) : sockfd(sockfd) {}
 
 	void close() {
+		assert(sockfd!=INVALID_SOCKET);
 		::close(sockfd);
-		sockfd = 0;
+		sockfd = INVALID_SOCKET;
+	}
+
+	void setSockfd(int sockfd) {
+		this->sockfd = sockfd;
 	}
 
 	int getSockfd() {
@@ -99,12 +71,8 @@ public:
 
 	}
 
-	const SocketAddress& getSocketAddress() const {
+	const SocketAddress & getSocketAddress() const {
 		return socketAddress;
-	}
-
-	const struct addrinfo * getAddrinfo() const {
-		return res;
 	}
 
 

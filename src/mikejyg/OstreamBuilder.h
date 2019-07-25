@@ -24,15 +24,6 @@ protected:
 
 public:
 
-	virtual ~OstreamBuilder() {}
-
-//	OstreamBuilder(OstreamBuilder && b2) : ss( std::move(b2.ss) ) {}
-//
-//	OstreamBuilder & operator = (OstreamBuilder && b2) {
-//		ss = std::move(b2.ss);
-//		return *this;
-//	}
-
 	template<typename T>
 	static std::unique_ptr<OstreamBuilder> builder(T const & v) {
 		auto builder = new OstreamBuilder;

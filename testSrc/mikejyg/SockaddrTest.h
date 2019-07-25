@@ -16,9 +16,6 @@ namespace mikejyg {
  */
 class SockaddrTest {
 protected:
-	static void doSomething(struct sockaddr & sa) {
-
-	}
 
 public:
 
@@ -30,16 +27,17 @@ public:
 		std::cout << "sizeof(struct sockaddr_storage): " << sizeof(struct sockaddr_storage) << std::endl;
 
 		InetSocketAddress sockaddr;
-		sockaddr.setAddrinfoSelectFunction([](struct addrinfo const * res){
+
+		auto selFunc = [](struct addrinfo const * res){
 			std::cout << SockaddrUtils::toString( res );
 			return res;
-		});
+		};
 
 		std::cout << "locahost:" << std::endl;
-		sockaddr.init("localhost", 0);
+		sockaddr.init("localhost", 0, selFunc);
 
 		std::cout << "yahoo.com:" << std::endl;
-		sockaddr.init("yahoo.com", 0);
+		sockaddr.init("yahoo.com", 0, selFunc);
 
 		// test Inet4Address::toInAddr
 		auto inAddr = Inet4Address::toInAddr("127.0.0.1");

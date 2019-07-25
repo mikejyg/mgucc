@@ -49,14 +49,6 @@ public:
 		setTimeToLive(1);
 	}
 
-	MulticastSocket(int aiFamilyHint) : DatagramSocket(aiFamilyHint) {
-		setTimeToLive(1);
-	}
-
-	MulticastSocket(unsigned port, int aiFamilyHint) : DatagramSocket(port, aiFamilyHint) {
-		setTimeToLive(1);
-	}
-
 #ifndef _WIN32
 	void setPriority(int priority) {
 		if ((setsockopt(sockfd, SOL_SOCKET, SO_PRIORITY, &priority, sizeof(priority))) < 0){

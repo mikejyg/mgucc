@@ -14,8 +14,11 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
+extern "C" int InetPtonW(int Family, const char * pszAddrString, void * pAddrBuf);
+
 #include <winsock2.h>
 #include <Ws2tcpip.h>
+
 #else
 #include <arpa/inet.h>
 #endif
@@ -24,10 +27,7 @@
 #include <cstring>
 #include <stdexcept>
 #include "ErrorUtils.h"
-
-#ifdef _WIN32
-extern "C" int InetPtonW(int Family, const char * pszAddrString, void * pAddrBuf);
-#endif
+#include "AddrinfoUtils.h"
 
 namespace mikejyg {
 
@@ -36,19 +36,18 @@ namespace mikejyg {
  */
 class Inet4Address: public InetAddress {
 public:
+	virtual ~Inet4Address() {}
+
+	Inet4Address() {}
 
 	/**
-	 * default address: 0.0.0.0
+	 * view a struct in_addr *
 	 */
-	Inet4Address() {
-		auto * inAddr = new struct in_addr;
-		memset(inAddr, 0, sizeof(in_addr));
-
-		wrap(inAddr);
-	}
-
 	Inet4Address(struct in_addr const * inAddr) : InetAddress(inAddr) {}
 
+	/**
+	 * view a struct in_addr *
+	 */
 	Inet4Address(struct in_addr * inAddr) : InetAddress(inAddr) {}
 
 	/**
@@ -59,7 +58,22 @@ public:
 		wrap(inAddrUptr.release());
 	}
 
-	virtual ~Inet4Address() {}
+	/**
+	 * get address from a hostname.
+	 */
+	template<typename F>
+	void init(std::string const & hostname, F && addrinfoSelectFunction = [](struct addrinfo const * res){ return res;} ) {
+		auto * res = AddrinfoUtils::getaddrinfo(hostname.c_str(), 0, AF_INET, 0, 0);
+		auto * selRes = addrinfoSelectFunction(res);
+		copy( (struct in_addr const *) & ((struct sockaddr_in *)selRes->ai_addr)->sin_addr );
+		freeaddrinfo(res);
+	}
+
+	virtual void copy(struct in_addr const * inAddr) override {
+		auto * newInAddr = new struct in_addr;
+		memcpy(newInAddr, inAddr, sizeof(struct in_addr));
+		wrap(newInAddr);
+	}
 
 	virtual std::string toString() const override {
 		char buf[INET_ADDRSTRLEN];

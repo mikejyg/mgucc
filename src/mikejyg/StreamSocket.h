@@ -9,11 +9,6 @@
 #define MIKEJYG_STREAMSOCKET_H_
 
 #ifdef _WIN32
-
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-
 #else
 #include <sys/socket.h>
 #endif
@@ -31,63 +26,33 @@ namespace mikejyg {
  */
 class StreamSocket : public Socket {
 protected:
-	struct addrinfo * resSel;
+	InetSocketAddress peerSockaddr;
 
 public:
 	virtual ~StreamSocket() {}
 
-	StreamSocket() : resSel(nullptr) {}
-
-	StreamSocket(StreamSocket && ss2) : Socket(std::move(ss2)), resSel(nullptr) {
-	}
-
-	StreamSocket & operator = (StreamSocket && ss2) {
-		Socket::operator=( std::move(ss2) );
-		return *this;
-	}
+	StreamSocket() {}
 
 	/**
-	 * create the socket for the target host and port and connect, but do not connect yet.
+	 * create the socket for the target host and port and connect.
 	 */
-	StreamSocket(char const * hostname, unsigned port) {
-		struct addrinfo hints;
-
-		// first, load up address structs with getaddrinfo():
-
-		memset(&hints, 0, sizeof hints);
-		hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
-		hints.ai_socktype = SOCK_STREAM;
-
-		res = SockaddrUtils::getaddrinfo(hostname, port, &hints);
-
-		// choose IPV4 if possible.
-
-		resSel=res;
-		while (resSel!=nullptr) {
-			if ( resSel->ai_family == AF_INET )
-				break;
-			resSel=resSel->ai_next;
-		}
-
-		if (resSel==nullptr)
-			resSel=res;
+	StreamSocket(InetAddress const & inAddr, unsigned port) {
+		peerSockaddr.init(inAddr, port);
 
 		// make a socket:
+		sockfd = SocketUtils::socket(peerSockaddr.getSaFamily(), SOCK_STREAM);
 
-		sockfd = socket(resSel->ai_family, resSel->ai_socktype, resSel->ai_protocol);
+		SocketUtils::connect(sockfd, peerSockaddr.getSockaddr(), peerSockaddr.getSockaddrLen());
 
-		socketAddress.copy(resSel->ai_addr, resSel->ai_addrlen);
-
-		if (sockfd==-1)
-			throw ErrorUtils::ErrnoException("socket() failed:");
+		// populate socketAddress
+		socketAddress = SocketUtils::getsockname(sockfd);
 
 	}
 
-	void connect() {
-		// connect it to the address and port we passed in to getaddrinfo():
-
-		SocketUtils::connect(sockfd, resSel->ai_addr, resSel->ai_addrlen);
+	InetSocketAddress const & getPeerSocketAddress() const {
+		return peerSockaddr;
 	}
+
 
 };
 

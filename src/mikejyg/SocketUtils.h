@@ -15,10 +15,13 @@
 #endif
 
 #include <winsock2.h>
+
 #else
 #include <sys/socket.h>
+
 #endif
 
+#include "sockfdDefs.h"
 #include <sys/types.h>
 #include <stdexcept>
 #include "ErrorUtils.h"
@@ -32,14 +35,27 @@ namespace mikejyg {
  */
 class SocketUtils {
 public:
-	static void connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+	static int socket(int domain, int type, int protocol=0) {
+		auto sockfd = ::socket(domain, type, protocol);
+		if (sockfd==INVALID_SOCKET)
+			throw ErrorUtils::ErrnoException("socket() failed:");
+		return sockfd;
+	}
+
+	static void bind(SockFdType sockfd, const struct sockaddr *address, socklen_t address_len) {
+		auto k = ::bind(sockfd, address, address_len);
+		if (k!=0)
+			throw ErrorUtils::ErrnoException("bind() failed:");
+	}
+
+	static void connect(SockFdType sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 		auto k = ::connect(sockfd, addr, addrlen);
 		if (k!=0) {
 			throw ErrorUtils::ErrnoException("connect() failed:");
 		}
 	}
 
-	static SocketAddress getsockname(int sockfd) {
+	static SocketAddress getsockname(SockFdType sockfd) {
 		struct sockaddr_storage address;
 		socklen_t address_len = sizeof(struct sockaddr_storage);
 

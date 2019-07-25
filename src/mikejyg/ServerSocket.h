@@ -31,46 +31,17 @@ public:
 
 	ServerSocket() : backlog(DEFAULT_BACKLOG) {}
 
-	ServerSocket(unsigned port, int aiFamilyHint=AF_UNSPEC) : ServerSocket() {
-
-		struct addrinfo hints;
-
-		// first, load up address structs with getaddrinfo():
-
-		memset(&hints, 0, sizeof hints);
-
-		hints.ai_family = aiFamilyHint;  // use IPv4 or IPv6, whichever
-
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
-
-		res = SockaddrUtils::getaddrinfo(nullptr, port, & hints);
-
-		// server on IPV6 will also work for IPV4, but not vice versa.
-		// choose IPV6 if possible.
-
-		auto resSel=res;
-		while (resSel!=nullptr) {
-			if ( resSel->ai_family == AF_INET6 )
-				break;
-			resSel=resSel->ai_next;
-		}
-
-		if (resSel==nullptr)
-			resSel=res;
+	ServerSocket(unsigned port, InetAddress const & bindInAddr) : ServerSocket() {
+		InetSocketAddress sockAddr(bindInAddr, port);
 
 		// make a socket:
+		sockfd = SocketUtils::socket(sockAddr.getSaFamily(), SOCK_STREAM);
 
-		sockfd = socket(resSel->ai_family, resSel->ai_socktype, resSel->ai_protocol);
+		// bind
+		SocketUtils::bind(sockfd, sockAddr.getSockaddr(), sockAddr.getSockaddrLen());
 
-		// bind it to the port we passed in to getaddrinfo():
-
-		auto k = ::bind(sockfd, resSel->ai_addr, resSel->ai_addrlen);
-		if (k!=0)
-			throw ErrorUtils::ErrnoException("bind() failed:");
-
-		socketAddress.copy(resSel->ai_addr, resSel->ai_addrlen);
-
+		// populate socketAddress
+		socketAddress = SocketUtils::getsockname(sockfd);
 	}
 
 	void listen() {
@@ -91,7 +62,7 @@ public:
 		auto new_fd = ::accept(sockfd, (struct sockaddr *)sockAddrUptr.get(), &addr_size);
 
 		StreamSocket streamSocket;
-		streamSocket.wrap(new_fd);
+		streamSocket.setSockfd(new_fd);
 
 		SocketAddress socketAddress;
 

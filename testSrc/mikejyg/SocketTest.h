@@ -31,14 +31,26 @@ public:
 	static void testClient(char const * hostname, unsigned port) {
 		std::cout << "testClient() " << hostname << " " << port << "..." << std::endl;
 
-		StreamSocket socket(hostname, port);
+		Inet4Address inet4Address;
+		inet4Address.init(hostname, [](struct addrinfo const * res){
+			std::cout << "available addrinfos:" << std::endl;
+			std::cout << SockaddrUtils::toString( res ) << std::endl;
 
-		std::cout << "available addrinfos:" << std::endl;
-		std::cout << SockaddrUtils::toString( socket.getAddrinfo() ) << std::endl;
+			while (res) {
+				if (res->ai_family==AF_INET
+#ifndef _WIN32		// windows only return one socktype 0, so don't check.
+						&& res->ai_socktype==SOCK_STREAM
+#endif
+						)
+					break;
+				res=res->ai_next;
+			}
+			return res;
+		});
 
-		std::cout << "peer socket: " << socket.getSocketAddress().toString() << std::endl;
-
-		socket.connect();
+		StreamSocket socket(inet4Address, port);
+		std::cout << "local socket address: " << socket.getSocketAddress().toString() << std::endl;
+		std::cout << "peer socket address: " << socket.getPeerSocketAddress().toString() << std::endl;
 
 		int cnt=0;
 
@@ -57,6 +69,8 @@ public:
 
 			std::this_thread::sleep_for(std::chrono::seconds(3));
 		}
+
+		socket.close();
 
 		std::cout << "testClient() done." << std::endl;
 	}
@@ -78,17 +92,15 @@ public:
 			std::cout << "sent response." << std::endl;
 		}
 
+		std::get<0>(client).close();
 	}
 
 	static void testServer(unsigned port) {
 		std::cout << "testServer() " << port << "..." << std::endl;
 
-		ServerSocket serverSocket(port, AF_INET);
+		ServerSocket serverSocket(port, Inet4Address("0.0.0.0"));
 
-		std::cout << "available addrinfos:" << std::endl;
-		std::cout << SockaddrUtils::toString( serverSocket.getAddrinfo() ) << std::endl;
-
-		std::cout << "server socket: " << serverSocket.getSocketAddress().toString() << std::endl;
+		std::cout << "server socket address: " << serverSocket.getSocketAddress().toString() << std::endl;
 
 		serverSocket.listen();
 
@@ -127,8 +139,8 @@ public:
 
 		}
 
+		serverSocket.close();
 	}
-
 
 };
 

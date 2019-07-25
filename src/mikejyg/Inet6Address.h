@@ -36,6 +36,12 @@ public:
 
 	virtual ~Inet6Address() {}
 
+	virtual void copy(struct in_addr const * inAddr) override {
+		auto * newInAddr = new struct in6_addr;
+		memcpy(newInAddr, inAddr, sizeof(struct in6_addr));
+		wrap( (struct in_addr *)newInAddr );
+	}
+
 	virtual std::string toString() const override {
 		char buf[INET6_ADDRSTRLEN];
 		memset(buf, 0xff, INET6_ADDRSTRLEN);

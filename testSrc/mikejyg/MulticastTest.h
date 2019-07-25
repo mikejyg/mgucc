@@ -22,18 +22,10 @@ public:
 	static void test(std::string const & groupIpStr, std::string const & interfaceIpStr) {
 		std::cout << "MulticastTest::test()..." << std::endl;
 
-		// wildcard address
-//		MulticastSocket ms(49150, AF_INET);
+		MulticastSocket ms(49150, Inet4Address(interfaceIpStr.c_str()));
 
-		Inet4Address ifAddr(interfaceIpStr.c_str());
-		MulticastSocket ms(49150, ifAddr);
-
-		std::cout << "available sockaddrs:" << std::endl;
-		std::cout << SockaddrUtils::toString(ms.getAddrinfo()) << std::endl;
-
-		auto ownSockaddr = SocketUtils::getsockname(ms.getSockfd());
-		std::cout << "local sockaddr: " << ownSockaddr.toString() << std::endl;
-		auto peerPort = static_cast<InetSocketAddress>(ownSockaddr).getPort();
+		std::cout << "local socket address: " << ms.getSocketAddress().toString() << std::endl;
+		auto peerPort = static_cast<InetSocketAddress const &>(ms.getSocketAddress()).getPort();
 
 		Inet4Address inetAddr(groupIpStr.c_str());
 
@@ -46,11 +38,13 @@ public:
 		// create multicast destination socket address
 		InetSocketAddress socketAddress(inetAddr, peerPort);
 
-		std::cout << "destination socketAddress: " << socketAddress.toString() << std::endl;
+		std::cout << "destination socket address: " << socketAddress.toString() << std::endl;
 
 		sendMessages(ms, socketAddress);
 
 		receiveThread.join();
+
+		ms.close();
 
 		std::cout << "MulticastTest::test() done." << std::endl;
 

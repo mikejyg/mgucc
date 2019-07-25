@@ -42,7 +42,6 @@ public:
 		return wsaService;
 	}
 
-
 };
 
 #endif	// _WIN32

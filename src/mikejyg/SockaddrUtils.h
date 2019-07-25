@@ -15,6 +15,7 @@
 #endif
 
 #include <winsock2.h>
+
 #else
 #include <sys/socket.h>
 #include <netdb.h>
@@ -127,28 +128,6 @@ public:
 		return str;
 	}
 
-	static struct addrinfo * getaddrinfo (const char * hostname, unsigned port, const struct addrinfo * hint) {
-		struct addrinfo *res;
-
-		auto portStr = std::to_string(port);
-
-		auto k = ::getaddrinfo(hostname, portStr.c_str(), hint, & res);
-
-		if (k!=0) {
-			throw std::runtime_error("getaddrinfo() failed, return code: " + std::to_string(k));
-		}
-
-		return res;
-	}
-
-	static struct addrinfo const * selectAddrinfoByFamily(struct addrinfo const * res, int af_family) {
-		while (res!=nullptr) {
-			if (res->ai_family==af_family)
-				break;
-			res=res->ai_next;
-		}
-		return res;
-	}
 
 };
 

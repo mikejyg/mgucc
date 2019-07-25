@@ -19,66 +19,19 @@ namespace mikejyg {
  */
 class DatagramSocket : public Socket {
 private:
-	struct addrinfo const * resSel;
 
 public:
 	virtual ~DatagramSocket() {}
 
-	DatagramSocket(unsigned port, InetAddress const & inetAddress) : resSel(nullptr) {
+	DatagramSocket(unsigned port, InetAddress const & inetAddress) {
 		InetSocketAddress socketAddress(inetAddress, port);
-		sockfd = socket(socketAddress.getSaFamily(), SOCK_DGRAM, 0);
 
-		auto k = ::bind(sockfd, socketAddress.getSockaddr(), socketAddress.getSockaddrLen());
-		if (k!=0)
-			throw ErrorUtils::ErrnoException("bind() failed:");
+		sockfd = SocketUtils::socket(socketAddress.getSaFamily(), SOCK_DGRAM);
+
+		SocketUtils::bind(sockfd, socketAddress.getSockaddr(), socketAddress.getSockaddrLen());
 
 		this->socketAddress = SocketUtils::getsockname(sockfd);
 	}
-
-	/**
-	 * Constructs a datagram socket and binds it to the specified port on the local host machine.
-	 */
-	DatagramSocket(unsigned port, int aiFamilyHint) : resSel(nullptr) {
-		struct addrinfo hints;
-
-		// first, load up address structs with getaddrinfo():
-
-		memset(&hints, 0, sizeof hints);
-
-		hints.ai_family = aiFamilyHint;  // use IPv4 or IPv6, whichever
-
-		hints.ai_socktype = SOCK_DGRAM;
-		hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
-
-		res = SockaddrUtils::getaddrinfo(nullptr, port, & hints);
-
-		// select the first result
-		resSel=res;
-
-		// make a socket:
-
-		sockfd = socket(resSel->ai_family, resSel->ai_socktype, resSel->ai_protocol);
-
-		// bind it to the port we passed in to getaddrinfo():
-
-		auto k = ::bind(sockfd, resSel->ai_addr, resSel->ai_addrlen);
-		if (k!=0)
-			throw ErrorUtils::ErrnoException("bind() failed:");
-
-		this->socketAddress = SocketUtils::getsockname(sockfd);
-
-	}
-
-	/**
-	 * Constructs a datagram socket and binds it to any available port on the local host machine.
-	 */
-	DatagramSocket(int aiFamilyHint) : DatagramSocket(0, aiFamilyHint)
-	{}
-
-	/**
-	 * any port on ipv4 or ipv6
-	 */
-	DatagramSocket() : DatagramSocket(AF_UNSPEC) {}
 
 	/**
 	 * returns the number of bytes sent.
@@ -109,9 +62,6 @@ public:
 		packet.copySockaddr((struct sockaddr *)&sockaddrStorage, sockaddrLen);
 	}
 
-	struct addrinfo const * getSelectedAddrinfo() const {
-		return resSel;
-	}
 
 };
 

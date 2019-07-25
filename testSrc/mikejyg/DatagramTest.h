@@ -65,39 +65,28 @@ public:
 	DatagramTest() {}
 	virtual ~DatagramTest() {}
 
-	static void test(std::string const & interfaceIpStr) {
+	static void test(std::string const & listeningIpStr, std::string const & destHost) {
 		std::cout << "DatagramTest::test()..." << std::endl;
 
-		// wildcard address
-//		DatagramSocket datagramSocket(AF_INET);
+		DatagramSocket datagramSocket(0, Inet4Address(listeningIpStr.c_str()));
 
-		Inet4Address ifAddr(interfaceIpStr.c_str());
-		DatagramSocket datagramSocket(0, ifAddr);
-
-		std::cout << "available sockaddrs:" << std::endl;
-		std::cout << SockaddrUtils::toString(datagramSocket.getAddrinfo()) << std::endl;
-
-		if (datagramSocket.getSelectedAddrinfo()!=nullptr)
-			std::cout << "selected sockaddr: " << SockaddrUtils::toString( * datagramSocket.getSelectedAddrinfo() ) << std::endl;
-
-		auto ownSockaddr = SocketUtils::getsockname(datagramSocket.getSockfd());
-		std::cout << "local sockaddr: " << ownSockaddr.toString() << std::endl;
-		auto peerPort = static_cast<InetSocketAddress>(ownSockaddr).getPort();
+		std::cout << "local socket address: " << datagramSocket.getSocketAddress().toString() << std::endl;
+		auto peerPort = static_cast<InetSocketAddress const &>(datagramSocket.getSocketAddress()).getPort();
 
 		auto receiveThread = runReceiveThread(datagramSocket);
 
 		// sender
 
-		InetSocketAddress socketAddress;
-		socketAddress.setAddrinfoSelectFunction([](struct addrinfo const * res){
-			return SockaddrUtils::selectAddrinfoByFamily(res, AF_INET);
+		InetSocketAddress socketAddress(destHost, peerPort, [](struct addrinfo const * res){
+			return AddrinfoUtils::selectAddrinfoByFamily(res, AF_INET);
 		});
-		socketAddress.init(interfaceIpStr, peerPort);
-		std::cout << "destination socketAddress: " << socketAddress.toString() << std::endl;
+		std::cout << "destination socket address: " << socketAddress.toString() << std::endl;
 
 		sendMessages(datagramSocket, socketAddress);
 
 		receiveThread.join();
+
+		datagramSocket.close();
 
 		std::cout << "DatagramTest::test() done." << std::endl;
 	}
