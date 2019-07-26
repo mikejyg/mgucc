@@ -10,7 +10,6 @@
 #include "Socket.h"
 #include "DatagramPacket.h"
 #include "InetSocketAddress.h"
-#include "SocketUtils.h"
 
 namespace mikejyg {
 
@@ -30,7 +29,7 @@ public:
 
 		SocketUtils::bind(sockfd, socketAddress.getSockaddr(), socketAddress.getSockaddrLen());
 
-		this->socketAddress = SocketUtils::getsockname(sockfd);
+		getsockname();
 	}
 
 	/**

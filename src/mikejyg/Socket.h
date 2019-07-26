@@ -12,6 +12,7 @@
 #include "SocketAddress.h"
 #include <unistd.h>
 #include "ErrorUtils.h"
+#include "SocketUtils.h"
 
 namespace mikejyg {
 
@@ -24,6 +25,17 @@ protected:
 	SockFdType sockfd;
 
 	SocketAddress socketAddress;
+
+	////////////////////////////////////////////
+
+	/**
+	 * populate socketAddress.
+	 */
+	void getsockname() {
+		auto sockaddrAndLen = SocketUtils::getsockname(sockfd);
+
+		socketAddress.copy((struct sockaddr*)sockaddrAndLen.first.get(), sockaddrAndLen.second);
+	}
 
 public:
 	Socket(SockFdType sockfd=INVALID_SOCKET) : sockfd(sockfd) {}

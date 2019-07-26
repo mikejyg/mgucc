@@ -20,7 +20,6 @@ extern "C" int InetPtonW(int Family, const char * pszAddrString, void * pAddrBuf
 #include <Ws2tcpip.h>
 
 #else
-#include <arpa/inet.h>
 #endif
 
 #include "InetAddress.h"
@@ -28,6 +27,7 @@ extern "C" int InetPtonW(int Family, const char * pszAddrString, void * pAddrBuf
 #include <stdexcept>
 #include "ErrorUtils.h"
 #include "AddrinfoUtils.h"
+#include "SockaddrUtils.h"
 
 namespace mikejyg {
 
@@ -54,19 +54,34 @@ public:
 	 * construct from a IPv4 address string.
 	 */
 	Inet4Address(const char * ipv4AddressStr) {
-		auto inAddrUptr = toInAddr(ipv4AddressStr);
+		auto inAddrUptr = SockaddrUtils::toStructInAddr(ipv4AddressStr);
 		wrap(inAddrUptr.release());
 	}
+
+	Inet4Address(std::string const & ipv4AddressStr) : Inet4Address(ipv4AddressStr.c_str()) {}
 
 	/**
 	 * get address from a hostname.
 	 */
 	template<typename F>
-	void init(std::string const & hostname, F && addrinfoSelectFunction = [](struct addrinfo const * res){ return res;} ) {
-		auto * res = AddrinfoUtils::getaddrinfo(hostname.c_str(), 0, AF_INET, 0, 0);
+	void initFromHostname(const char * hostname, F && addrinfoSelectFunction) {
+		auto * res = AddrinfoUtils::getaddrinfo(hostname, 0, AF_INET, 0, 0);
 		auto * selRes = addrinfoSelectFunction(res);
 		copy( (struct in_addr const *) & ((struct sockaddr_in *)selRes->ai_addr)->sin_addr );
 		freeaddrinfo(res);
+	}
+
+	template<typename F>
+	void initFromHostname(std::string const & hostname, F && addrinfoSelectFunction) {
+		initFromHostname(hostname.c_str(), std::forward<F>(addrinfoSelectFunction));
+	}
+
+	void initFromHostname(const char * hostname) {
+		initFromHostname(hostname, [](struct addrinfo const * res){ return res;});
+	}
+
+	void initFromHostname(std::string const & hostname) {
+		initFromHostname(hostname.c_str());
 	}
 
 	virtual void copy(struct in_addr const * inAddr) override {
@@ -76,25 +91,7 @@ public:
 	}
 
 	virtual std::string toString() const override {
-		char buf[INET_ADDRSTRLEN];
-		memset(buf, 0xff, INET_ADDRSTRLEN);
-
-		inet_ntop(AF_INET, get(), buf, INET_ADDRSTRLEN);
-
-		return std::string(buf);
-
-	}
-
-	static struct std::unique_ptr<in_addr> toInAddr(const char * cp) {
-		auto inAddr = new struct in_addr;
-#ifdef _WIN32
-		inAddr->s_addr = inet_addr(cp);
-#else
-		auto k = inet_aton(cp, inAddr);
-		if (k==0)
-			throw std::runtime_error(std::string("invalid address: ") + cp);
-#endif
-		return std::unique_ptr<in_addr>(inAddr);
+		return SockaddrUtils::toString(get());
 	}
 
 	virtual std::unique_ptr<struct sockaddr> toStructSockaddr() const override {

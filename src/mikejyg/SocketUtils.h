@@ -25,8 +25,6 @@
 #include <sys/types.h>
 #include <stdexcept>
 #include "ErrorUtils.h"
-#include "SocketAddress.h"
-#include "InetSocketAddress.h"
 
 namespace mikejyg {
 
@@ -55,17 +53,18 @@ public:
 		}
 	}
 
-	static SocketAddress getsockname(SockFdType sockfd) {
-		struct sockaddr_storage address;
+	/**
+	 * a more user friendly version of ::getsockname()
+	 */
+	static std::pair<std::unique_ptr<struct sockaddr_storage>, socklen_t> getsockname(SockFdType sockfd) {
+		auto * addr = new struct sockaddr_storage;
 		socklen_t address_len = sizeof(struct sockaddr_storage);
 
-		auto k = ::getsockname(sockfd, (struct sockaddr*)&address, &address_len);
+		auto k = ::getsockname(sockfd, (struct sockaddr*)addr, &address_len);
 		if (k!=0)
 			throw ErrorUtils::ErrnoException("getsockname() failed:");
 
-		SocketAddress sockaddr;
-		sockaddr.copy((struct sockaddr*)&address, address_len);
-		return sockaddr;
+		return std::pair<std::unique_ptr<struct sockaddr_storage>, socklen_t>(std::unique_ptr<struct sockaddr_storage>(addr), address_len);
 
 	}
 

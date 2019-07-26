@@ -68,6 +68,64 @@ public:
 		return getaddrinfo(hostname, port, family, SOCK_STREAM, 0);
 	}
 
+	static std::string toString(struct addrinfo const & ai) {
+		std::string str;
+
+		auto aiFamily = ai.ai_family;
+
+		switch (aiFamily) {
+		case AF_INET:
+		case AF_INET6:
+			str += SockaddrUtils::toString( ai.ai_addr );
+			break;
+
+		default:
+			str += "unknown ai_family: " + std::to_string(aiFamily);
+		}
+
+		switch (ai.ai_socktype) {
+		case SOCK_DGRAM:
+			str += ", SOCK_DGRAM"; break;
+
+		case SOCK_STREAM:
+			str += ", SOCK_STREAM"; break;
+
+		case SOCK_RAW:
+			str += ", SOCK_RAW"; break;
+
+		default:
+			str += ", unknown socktype: " + std::to_string(ai.ai_socktype); break;
+		}
+
+		switch (ai.ai_protocol) {
+		case IPPROTO_TCP:
+			str += ", IPPROTO_TCP"; break;
+		case IPPROTO_UDP:
+			str += ", IPPROTO_UDP"; break;
+		case IPPROTO_IP:
+			str += ", IPPROTO_IP"; break;
+		default:
+			str += ", unknown protocol: " + std::to_string(ai.ai_protocol); break;
+		}
+
+		if ( ai.ai_canonname != nullptr ) {
+			str += ", ";
+			str += ai.ai_canonname;
+		}
+
+		return str;
+	}
+
+	static std::string toString(struct addrinfo const * res) {
+		std::string str;
+		while (res) {
+			str += toString(*res);
+			str += "\n";
+			res=res->ai_next;
+		}
+		return str;
+	}
+
 
 };
 

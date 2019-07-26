@@ -27,6 +27,8 @@
 typedef u_short sa_family_t;
 #endif
 
+#include <cstring>
+
 namespace mikejyg {
 
 /**

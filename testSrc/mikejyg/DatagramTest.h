@@ -77,7 +77,8 @@ public:
 
 		// sender
 
-		InetSocketAddress socketAddress(destHost, peerPort, [](struct addrinfo const * res){
+		InetSocketAddress socketAddress;
+		socketAddress.initFromHostname(destHost, peerPort, [](struct addrinfo const * res){
 			return AddrinfoUtils::selectAddrinfoByFamily(res, AF_INET);
 		});
 		std::cout << "destination socket address: " << socketAddress.toString() << std::endl;

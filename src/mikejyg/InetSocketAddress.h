@@ -101,6 +101,16 @@ public:
 	}
 
 	/**
+	 * construct a view object.
+	 * This is for casting SocketAddress to InetSocketAddress.
+	 */
+	InetSocketAddress(SocketAddress const & socketAddress) : SocketAddress(socketAddress) {
+		// verify
+		if (getSaFamily()!=SocketAddress::INET && getSaFamily()!=SocketAddress::INET6)
+			throw std::runtime_error("InetSocketAddress() socketAddress is not inet.");
+	}
+
+	/**
 	 * construct from a given InetAddress and a port.
 	 */
 	InetSocketAddress(const InetAddress & inetAddr, unsigned port)
@@ -109,14 +119,8 @@ public:
 	}
 
 	/**
-	 * it calls init().
+	 * init from a InetAddress and a port.
 	 */
-	template<typename F>
-	InetSocketAddress(std::string const & hostname, unsigned port
-			, F && addrinfoSelectFunction = [](struct addrinfo const * res){ return res;} ) {
-		init(hostname, port, std::forward<F>(addrinfoSelectFunction));
-	}
-
 	void init(const InetAddress & inetAddr, unsigned port)
 	{
 		wrap( inetAddr.toStructSockaddr().release(), inetAddr.getStructSockaddrLen() );
@@ -133,15 +137,21 @@ public:
 	 *
 	 */
 	template<typename F>
-	void init(std::string const & hostname, unsigned port
+	void initFromHostname(const char * hostname, unsigned port
 			, F && addrinfoSelectFunction = [](struct addrinfo const * res){ return res;} ) {
-		auto * res = AddrinfoUtils::getaddrinfo(hostname.c_str(), port, nullptr);
+		auto * res = AddrinfoUtils::getaddrinfo(hostname, port, nullptr);
 
 		auto * selRes = addrinfoSelectFunction(res);
 
 		init(selRes);
 
 		freeaddrinfo(res);
+	}
+
+	template<typename F>
+	void initFromHostname(std::string const & hostname, unsigned port
+			, F && addrinfoSelectFunction = [](struct addrinfo const * res){ return res;} ) {
+		initFromHostname(hostname.c_str(), port, std::forward<F>(addrinfoSelectFunction));
 	}
 
 	unsigned getPort() const {
@@ -152,6 +162,18 @@ public:
 		((struct sockaddr_in *)getSockaddr())->sin_port = htons(port);
 	}
 
+	std::string getInAddrStr() const {
+		switch (getSaFamily()) {
+		case SocketAddress::INET:
+			return SockaddrUtils::toString( & ((struct sockaddr_in const *)getSockaddr())->sin_addr );
+
+		case SocketAddress::INET6:
+			return SockaddrUtils::toString( & ((struct sockaddr_in6 const *)getSockaddr())->sin6_addr );
+
+		default:
+			throw std::runtime_error( "getInAddrStr() unknown family: " + std::to_string(getSaFamily()) );
+		}
+	}
 
 };
 

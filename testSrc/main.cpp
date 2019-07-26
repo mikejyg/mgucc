@@ -89,6 +89,9 @@ int main(int argc, char **argv) {
 	SockaddrTest::test();
 
 #ifdef _WIN32
+
+	std::cout << "AdapterInfo..." << std::endl;
+
 	AdapterInfo::ipconfig();
 
 	AdapterInfo::getAdaptersAddresses();

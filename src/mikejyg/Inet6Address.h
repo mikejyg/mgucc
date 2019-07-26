@@ -16,7 +16,6 @@
 
 #include <winsock2.h>
 #else
-#include <arpa/inet.h>
 #endif
 
 #include "InetAddress.h"
@@ -29,6 +28,7 @@ namespace mikejyg {
  */
 class Inet6Address: public InetAddress {
 public:
+	Inet6Address() {}
 
 	Inet6Address(struct in6_addr const * in6AddrPtr) : InetAddress( (struct in_addr *) in6AddrPtr ) {}
 
@@ -36,6 +36,33 @@ public:
 
 	virtual ~Inet6Address() {}
 
+	/**
+	 * get address from a hostname.
+	 */
+	template<typename F>
+	void initFromHostname(const char * hostname, F && addrinfoSelectFunction) {
+		auto * res = AddrinfoUtils::getaddrinfo(hostname, 0, AF_INET6, 0, 0);
+		auto * selRes = addrinfoSelectFunction(res);
+		copy( (struct in_addr const *) & ((struct sockaddr_in6 *)selRes->ai_addr)->sin6_addr );
+		freeaddrinfo(res);
+	}
+
+	template<typename F>
+	void initFromHostname(std::string const & hostname, F && addrinfoSelectFunction) {
+		initFromHostname(hostname.c_str(), std::forward<F>(addrinfoSelectFunction));
+	}
+
+	void initFromHostname(const char * hostname) {
+		initFromHostname(hostname, [](struct addrinfo const * res){ return res;});
+	}
+
+	void initFromHostname(std::string const & hostname) {
+		initFromHostname(hostname.c_str());
+	}
+
+	/**
+	 * copy from an existing struct in6_addr.
+	 */
 	virtual void copy(struct in_addr const * inAddr) override {
 		auto * newInAddr = new struct in6_addr;
 		memcpy(newInAddr, inAddr, sizeof(struct in6_addr));
@@ -43,13 +70,7 @@ public:
 	}
 
 	virtual std::string toString() const override {
-		char buf[INET6_ADDRSTRLEN];
-		memset(buf, 0xff, INET6_ADDRSTRLEN);
-
-		inet_ntop(AF_INET6, get(), buf, INET6_ADDRSTRLEN);
-
-		return std::string(buf);
-
+		return SockaddrUtils::toString( (struct in6_addr *)get() );
 	}
 
 	virtual std::unique_ptr<struct sockaddr> toStructSockaddr() const override {

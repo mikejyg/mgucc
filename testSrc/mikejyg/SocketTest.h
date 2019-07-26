@@ -32,21 +32,7 @@ public:
 		std::cout << "testClient() " << hostname << " " << port << "..." << std::endl;
 
 		Inet4Address inet4Address;
-		inet4Address.init(hostname, [](struct addrinfo const * res){
-			std::cout << "available addrinfos:" << std::endl;
-			std::cout << SockaddrUtils::toString( res ) << std::endl;
-
-			while (res) {
-				if (res->ai_family==AF_INET
-#ifndef _WIN32		// windows only return one socktype 0, so don't check.
-						&& res->ai_socktype==SOCK_STREAM
-#endif
-						)
-					break;
-				res=res->ai_next;
-			}
-			return res;
-		});
+		inet4Address.initFromHostname(hostname);
 
 		StreamSocket socket(inet4Address, port);
 		std::cout << "local socket address: " << socket.getSocketAddress().toString() << std::endl;

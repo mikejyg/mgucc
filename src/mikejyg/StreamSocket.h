@@ -45,8 +45,7 @@ public:
 		SocketUtils::connect(sockfd, peerSockaddr.getSockaddr(), peerSockaddr.getSockaddrLen());
 
 		// populate socketAddress
-		socketAddress = SocketUtils::getsockname(sockfd);
-
+		getsockname();
 	}
 
 	InetSocketAddress const & getPeerSocketAddress() const {

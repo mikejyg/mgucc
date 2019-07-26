@@ -11,7 +11,6 @@
 #include "SockaddrUtils.h"
 #include "Socket.h"
 #include "ErrorUtils.h"
-#include <tuple>
 #include "SocketAddress.h"
 
 namespace mikejyg {
@@ -41,7 +40,7 @@ public:
 		SocketUtils::bind(sockfd, sockAddr.getSockaddr(), sockAddr.getSockaddrLen());
 
 		// populate socketAddress
-		socketAddress = SocketUtils::getsockname(sockfd);
+		getsockname();
 	}
 
 	void listen() {

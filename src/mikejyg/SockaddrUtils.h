@@ -15,17 +15,22 @@
 #endif
 
 #include <winsock2.h>
+#include <Ws2tcpip.h>
+
+// mingw is missing this one:
+extern "C" const char * inet_ntop (int af, const void *src, char *dst, socklen_t size);
+extern "C" int inet_pton (int af, const char *src, void *dst);
 
 #else
 #include <sys/socket.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #endif
 
 #include <string>
-#include "Inet4Address.h"
-#include "Inet6Address.h"
 #include <sys/types.h>
 #include <stdexcept>
+#include <cstring>
 
 namespace mikejyg {
 
@@ -35,13 +40,21 @@ namespace mikejyg {
 class SockaddrUtils {
 public:
 	static std::string toString(struct in_addr const * inAddrPtr) {
-		Inet4Address inet4Address(inAddrPtr);
-		return inet4Address.toString();
+		char buf[INET_ADDRSTRLEN];
+		memset(buf, 0xff, INET_ADDRSTRLEN);
+
+		inet_ntop(AF_INET, inAddrPtr, buf, INET_ADDRSTRLEN);
+
+		return std::string(buf);
 	}
 
 	static std::string toString(struct in6_addr const * inAddrPtr) {
-		Inet6Address inet6Address(inAddrPtr);
-		return inet6Address.toString();
+		char buf[INET6_ADDRSTRLEN];
+		memset(buf, 0xff, INET6_ADDRSTRLEN);
+
+		inet_ntop(AF_INET6, inAddrPtr, buf, INET6_ADDRSTRLEN);
+
+		return std::string(buf);
 	}
 
 	static std::string toString(struct sockaddr const * sockaddrPtr) {
@@ -51,14 +64,14 @@ public:
 		case AF_INET: {
 			auto * inet4SockaddrPtr = (struct sockaddr_in *) sockaddrPtr;
 			str = toString(& inet4SockaddrPtr->sin_addr);
-			str += ":" + std::to_string( ntohs(inet4SockaddrPtr->sin_port) );
+			str += " : " + std::to_string( ntohs(inet4SockaddrPtr->sin_port) );
 			break;
 		}
 
 		case AF_INET6: {
 			auto * inet6SockaddrPtr = (struct sockaddr_in6 *) sockaddrPtr;
 			str = toString(& inet6SockaddrPtr->sin6_addr);
-			str += ":" + std::to_string( ntohs(inet6SockaddrPtr->sin6_port) );
+			str += " : " + std::to_string( ntohs(inet6SockaddrPtr->sin6_port) );
 			break;
 		}
 
@@ -70,62 +83,26 @@ public:
 		return str;
 	}
 
-	static std::string toString(struct addrinfo const & ai) {
-		std::string str;
+	static struct std::unique_ptr<struct in_addr> toStructInAddr(const char * ipAddressStr) {
+		auto * inAddr = new struct in_addr;
 
-		auto aiFamily = ai.ai_family;
+		auto k = inet_pton(AF_INET, ipAddressStr, inAddr);
 
-		switch (aiFamily) {
-		case AF_INET:
-		case AF_INET6:
-			str += toString( ai.ai_addr );
-			break;
+		if (k!=1)
+			throw std::runtime_error(std::string("inet_pton failed: ") + ipAddressStr);
 
-		default:
-			str += "unknown ai_family: " + std::to_string(aiFamily);
-		}
-
-		switch (ai.ai_socktype) {
-		case SOCK_DGRAM:
-			str += ", SOCK_DGRAM"; break;
-
-		case SOCK_STREAM:
-			str += ", SOCK_STREAM"; break;
-
-		case SOCK_RAW:
-			str += ", SOCK_RAW"; break;
-
-		default:
-			str += ", unknown socktype: " + std::to_string(ai.ai_socktype); break;
-		}
-
-		switch (ai.ai_protocol) {
-		case IPPROTO_TCP:
-			str += ", IPPROTO_TCP"; break;
-		case IPPROTO_UDP:
-			str += ", IPPROTO_UDP"; break;
-		case IPPROTO_IP:
-			str += ", IPPROTO_IP"; break;
-		default:
-			str += ", unknown protocol: " + std::to_string(ai.ai_protocol); break;
-		}
-
-		if ( ai.ai_canonname != nullptr ) {
-			str += ", ";
-			str += ai.ai_canonname;
-		}
-
-		return str;
+		return std::unique_ptr<struct in_addr>(inAddr);
 	}
 
-	static std::string toString(struct addrinfo const * res) {
-		std::string str;
-		while (res) {
-			str += toString(*res);
-			str += "\n";
-			res=res->ai_next;
-		}
-		return str;
+	static struct std::unique_ptr<struct in6_addr> toStructIn6Addr(const char * ip6AddressStr) {
+		auto * in6Addr = new struct in6_addr;
+
+		auto k = inet_pton(AF_INET6, ip6AddressStr, in6Addr);
+
+		if (k!=1)
+			throw std::runtime_error(std::string("inet_pton failed: ") + ip6AddressStr);
+
+		return std::unique_ptr<struct in6_addr>(in6Addr);
 	}
 
 

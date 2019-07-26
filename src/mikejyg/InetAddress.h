@@ -17,9 +17,6 @@
 
 #include <winsock2.h>
 
-// mingw is missing this one:
-extern "C" const char * inet_ntop (int af, const void *src, char *dst, socklen_t size);
-
 #else
 #include <netinet/in.h>
 #include <netdb.h>
