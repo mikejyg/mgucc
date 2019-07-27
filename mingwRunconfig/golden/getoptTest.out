@@ -1,0 +1,11 @@
+-h, --help	print help
+-s	short only
+, --longOnly	long only
+-a optarg	short option with optional argument
+got -s
+got --longOnly
+-a bcd
+unknown option: e - skipped.
+no argument provided for -a
+non-option ARGV-elements: not a option 
+GetoptLongTest::test() done.

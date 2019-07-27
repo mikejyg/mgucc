@@ -59,6 +59,9 @@ public:
 	 */
 	virtual unsigned getStructSockaddrLen() const=0;
 
+	/**
+	 * copy a given inAddr - it can be in_addr, or in6_addr.
+	 */
 	virtual void copy(struct in_addr const * inAddr) = 0;
 
 };

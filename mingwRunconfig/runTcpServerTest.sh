@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-../mingwDebug/mgucc -s 49150
+
+../mingwDebug/mgucc socketTest -s 49150

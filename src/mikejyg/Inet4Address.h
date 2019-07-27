@@ -67,7 +67,12 @@ public:
 	void initFromHostname(const char * hostname, F && addrinfoSelectFunction) {
 		auto * res = AddrinfoUtils::getaddrinfo(hostname, 0, AF_INET, 0, 0);
 		auto * selRes = addrinfoSelectFunction(res);
-		copy( (struct in_addr const *) & ((struct sockaddr_in *)selRes->ai_addr)->sin_addr );
+
+		if ( selRes->ai_addr->sa_family != AF_INET )
+			throw std::runtime_error("initFromHostname() addrinfo is not IPv4.");
+
+		copy( & ((struct sockaddr_in *)selRes->ai_addr)->sin_addr );
+
 		freeaddrinfo(res);
 	}
 

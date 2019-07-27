@@ -47,8 +47,9 @@ public:
 		std::cout << "s_addr of 127.0.0.1: 0x" << std::hex << inAddr->s_addr << std::endl;
 		assert( inAddr->s_addr == htonl(127*256*256*256+1) );
 
-		auto in6Addr = SockaddrUtils::toStructIn6Addr("::1:0");
-		std::cout << "s_addr of ::1:0 : 0x" << std::hex;
+		std::string ipv6Addr("1234:5678:9abc:def0::4:0");
+		auto in6Addr = SockaddrUtils::toStructIn6Addr(ipv6Addr.c_str());
+		std::cout << "s_addr of " << ipv6Addr << ": 0x " << std::hex;
 
 		for (auto i=0; i<16; i++) {
 			std::cout << (int) in6Addr->s6_addr[i] << " ";
@@ -57,7 +58,7 @@ public:
 
 		auto backIn6Str = SockaddrUtils::toString(in6Addr.get());
 		std::cout << "result of inet_ntop: " << backIn6Str << std::endl;
-		assert( backIn6Str == "::0.1.0.0" );
+		assert( backIn6Str == ipv6Addr );
 
 		std::cout << "test making inet addresses from a hostname..." << std::endl;
 

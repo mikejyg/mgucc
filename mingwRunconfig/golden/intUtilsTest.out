@@ -1,0 +1,3 @@
+RAND_MAX: 7fff
+x=8000: 7fff, 0
+x=1: 0, 0

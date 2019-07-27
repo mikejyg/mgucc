@@ -15,6 +15,7 @@
 #include "mikejyg/MulticastTest.h"
 #include "mikejyg/AdapterInfo.h"
 #include <mikejyg/OstreamBuilder.h>
+#include "mikejyg/GetoptLongTest.h"
 
 using namespace mikejyg;
 
@@ -78,44 +79,62 @@ void testTcp(int argc, char **argv, int & argIdx) {
 	}
 }
 
-int main(int argc, char **argv) {
+#ifdef _WIN32
+void adapterInfoTest() {
+	std::cout << "AdapterInfo..." << std::endl;
+	AdapterInfo::ipconfig();
+	AdapterInfo::getAdaptersAddresses();
+}
+#endif
 
+int main(int argc, char **argv) {
 #ifdef _WIN32
 	WsaService::getInstance();
 #endif
 
-	IntUtils::test();
-
-	SockaddrTest::test();
-
-#ifdef _WIN32
-
-	std::cout << "AdapterInfo..." << std::endl;
-
-	AdapterInfo::ipconfig();
-
-	AdapterInfo::getAdaptersAddresses();
-#endif
+	if (argc<2) {
+		std::cout << "missing command argument." << std::endl;
+		exit(1);
+	}
 
 	int argIdx=1;
+	std::string cmdStr = argv[argIdx];
 
-	if (argc-argIdx<1) {
-		std::cout << "for further testing, please provide arguments for test type: -u for udp tests, -s for tcp server, -c for tcp client" << std::endl;
-		exit(0);
+	if (cmdStr=="getoptTest") {
+		GetoptLongTest::test(argc-argIdx, argv+argIdx);
+
+	} else if (cmdStr=="intUtilsTest") {
+		IntUtils::test();
+
+	} else if (cmdStr=="sockaddrTest") {
+		SockaddrTest::test();
+
+#ifdef _WIN32
+	} else if (cmdStr=="adapterInfoTest") {
+		adapterInfoTest();
+#endif
+	} else if (cmdStr=="socketTest") {
+		argIdx++;	// skip the command
+
+		// first check for UDP test
+		if ( strcmp("-u", argv[argIdx])==0 ) {
+			argIdx++;
+
+			testUdp(argc, argv, argIdx);
+
+			if (argIdx>=argc)	// no more args
+				exit(0);
+		}
+
+		// next check for TCP test
+		testTcp(argc, argv, argIdx);
+
+
+	} else {
+		std::cout << "unknown command: " << cmdStr << std::endl;
+		exit(1);
 	}
 
-	// first check for UDP test
-	if ( strcmp("-u", argv[argIdx])==0 ) {
-		argIdx++;
-
-		testUdp(argc, argv, argIdx);
-
-		if (argIdx>=argc)	// no more args
-			exit(0);
-	}
-
-	// next check for TCP test
-	testTcp(argc, argv, argIdx);
 
 }
 

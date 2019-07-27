@@ -43,6 +43,10 @@ public:
 	void initFromHostname(const char * hostname, F && addrinfoSelectFunction) {
 		auto * res = AddrinfoUtils::getaddrinfo(hostname, 0, AF_INET6, 0, 0);
 		auto * selRes = addrinfoSelectFunction(res);
+
+		if ( selRes->ai_addr->sa_family != AF_INET6 )
+			throw std::runtime_error("initFromHostname() addrinfo is not IPv6.");
+
 		copy( (struct in_addr const *) & ((struct sockaddr_in6 *)selRes->ai_addr)->sin6_addr );
 		freeaddrinfo(res);
 	}
@@ -60,9 +64,6 @@ public:
 		initFromHostname(hostname.c_str());
 	}
 
-	/**
-	 * copy from an existing struct in6_addr.
-	 */
 	virtual void copy(struct in_addr const * inAddr) override {
 		auto * newInAddr = new struct in6_addr;
 		memcpy(newInAddr, inAddr, sizeof(struct in6_addr));
@@ -70,7 +71,7 @@ public:
 	}
 
 	virtual std::string toString() const override {
-		return SockaddrUtils::toString( (struct in6_addr *)get() );
+		return SockaddrUtils::toString((struct in6_addr *)get());
 	}
 
 	virtual std::unique_ptr<struct sockaddr> toStructSockaddr() const override {

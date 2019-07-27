@@ -1,1 +1,1 @@
-../Debug/mgucc -c localhost 49150
+../Debug/mgucc socketTest -c localhost 49150
