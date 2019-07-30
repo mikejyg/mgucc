@@ -6,6 +6,7 @@
 
 #include <mikejyg/InetSocketAddress.h>
 #include <iostream>
+#include <mikejyg/GetoptLong.h>
 
 namespace mikejyg {
 
@@ -17,8 +18,7 @@ protected:
 
 public:
 
-	static void test() {
-
+	static void builtInTest() {
 		std::cout << "sizeof(struct sockaddr): " << sizeof(struct sockaddr) << std::endl;
 		std::cout << "sizeof(struct sockaddr_in): " << sizeof(struct sockaddr_in) << std::endl;
 		std::cout << "sizeof(struct sockaddr_in6): " << sizeof(struct sockaddr_in6) << std::endl;
@@ -76,6 +76,30 @@ public:
 		} catch (std::exception & e) {
 			std::cout << "failed to get IPv6 address: " << e.what() << std::endl;
 		}
+
+	}
+
+	static void test(int argc, char * argv[]) {
+		GetoptLong getoptLong;
+
+		getoptLong.addOption('h', "help", [&]{
+				std::cout << getoptLong.toHelpString();
+		}, "print help.");
+
+		getoptLong.addOption('b', "", []{
+			builtInTest();
+		}, "run the built-in-test.");
+
+		getoptLong.addOption<GetoptLong::REQUIRED_ARGUMENT>('g', "", [](const char * hostname){
+			InetSocketAddress sockaddr;
+			sockaddr.initFromHostname(hostname, 0, [](struct addrinfo const * res){
+				std::cout << "available addrinfos:" << std::endl;
+				std::cout << AddrinfoUtils::toString( res ) << std::endl;
+				return res;
+			});
+		}, "getaddrinfo() of a hostname.", "hostname");
+
+		getoptLong.parse(argc, argv);
 
 	}
 

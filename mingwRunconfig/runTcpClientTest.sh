@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-../mingwDebug/mgucc socketTest -c localhost 49150
+../mingwDebug/mgucc socketTest -c -d localhost -p 49150

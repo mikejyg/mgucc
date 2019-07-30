@@ -31,21 +31,21 @@ public:
 		getoptLong.addOption(0, "longOnly", [&](){ std::cout << "got --longOnly" << std::endl; }
 			, "long only");
 
-		getoptLong.addOption< GetoptLong::OPTIONAL_ARGUMENT>('a', "", [&](const char * optarg){
+		getoptLong.addOption<GetoptLong::OPTIONAL_ARGUMENT>('a', "", [&](const char * optarg){
 			if (optarg)
 				std::cout << "-a " << optarg << std::endl;
 			else
 				std::cout << "no argument provided for -a" << std::endl;
 		}, "short option with optional argument", "optarg");
 
-		// skip the unknow option, instead of quitting.
-		getoptLong.parse(argc, argv, [](int optopt){
-			std::cout << "unknown option: " << (char)optopt << " - skipped." << std::endl;
-		});
+		try {
+			// skip the unknow option, instead of quitting.
+			getoptLong.parse(argc, argv, [](int optopt){
+				std::cout << "unknown option: " << (char)optopt << " - skipped." << std::endl;
+			});
 
-		// print out remaining unparsed non-option arguments, if any.
-
-		if (getoptLong.getOptind()<argc) {
+		} catch (GetoptLong::NonoptionException & e) {
+			// print out remaining unparsed non-option arguments, if any.
 			std::cout << "non-option ARGV-elements: ";
 			auto idx = getoptLong.getOptind();
 			while (idx < argc)

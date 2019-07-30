@@ -2,5 +2,5 @@
 
 outfile=sockaddrTest.out
 rm $outfile
-../Debug/mgucc sockaddrTest | tee $outfile
+../Debug/mgucc sockaddrTest -b | tee $outfile
 diff golden/$outfile $outfile

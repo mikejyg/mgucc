@@ -31,6 +31,8 @@ public:
 
 	class UnknownOptionException : public std::exception {};
 
+	class NonoptionException : public std::exception {};
+
 protected:
 	struct OptionStruct {
 		char optChar;
@@ -67,6 +69,8 @@ protected:
 	std::unique_ptr<struct option> long_options;
 
 	int longOptCnt;
+
+	bool stopFlag;	// to stop processing arguments
 
 	// working variables
 	int longIndex;
@@ -107,7 +111,7 @@ protected:
 	class SetActionHelper;
 
 public:
-	GetoptLong() : longOptVal(256), longOptCnt(0) {}
+	GetoptLong() : longOptVal(256), longOptCnt(0), stopFlag(false) {}
 
 	/**
 	 * If optChar is 0, then no short option.
@@ -141,15 +145,18 @@ public:
 
 	/**
 	 * f is the unknown option handler, void(int)
+	 *
+	 * throws NonoptionException if a non-option argv is encountered, with optind pointing to the argv.
 	 */
 	template<typename F>
 	void parse( int argc, char *argv[], F && f) {
 		optind=1;
+		optarg=0;
 
 		buildLongOptions();
 		buildOptstring();
 
-		while (true) {
+		while (!stopFlag) {
 
 			auto c = getopt_long(argc, argv, optstring.c_str(), long_options.get(), &longIndex);
 
@@ -170,10 +177,13 @@ public:
 
 			optionStruct.action(optarg);
 		}
+
+		if (optind != argc)
+			throw NonoptionException();
 	}
 
 	/**
-	 * with default unknown option handler, throws an exception.
+	 * with default unknown option handler, throws an UnknownOptionException, with optopt containing the option character
 	 */
 	void parse( int argc, char *argv[]) {
 		parse(argc, argv, [](int){ throw UnknownOptionException(); });
@@ -198,6 +208,17 @@ public:
 	 */
 	static void setOpterr(int opterr) {
 		::opterr = opterr;
+	}
+
+	/**
+	 * return the static extern char *optarg;
+	 */
+	static const char * getOptarg() {
+		return optarg;
+	}
+
+	void setStopFlag(bool stopFlag) {
+		this->stopFlag = stopFlag;
 	}
 
 	std::string toHelpString() const {

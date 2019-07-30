@@ -1,1 +1,1 @@
-../Debug/mgucc socketTest -s 49150
+../Debug/mgucc socketTest -s -p 49150
