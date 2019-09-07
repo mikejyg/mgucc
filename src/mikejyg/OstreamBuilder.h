@@ -9,6 +9,7 @@
 
 #include <sstream>
 #include <mutex>
+#include <memory>
 
 namespace mikejyg {
 
